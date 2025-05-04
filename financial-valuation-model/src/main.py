@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from data_processing.excel_reader import read_excel
 from data_processing.excel_inspector import inspect_excel_structure, print_excel_structure
+from data_processing.financial_parser import parse_financial_statements
 from models.valuation import ValuationModel
 from ui.app import App
 
@@ -36,7 +37,7 @@ def main():
                 print_excel_structure(structure_info)
                 print("\nVerifying that expected sheets exist...")
                 
-                # Define sheet name variations to look for (same as in excel_reader.py)
+                # Define sheet name variations to look for
                 sheet_variations = {
                     'balance_sheet': ['BalanceSheet', 'Balance Sheet', 'Balance_Sheet'],
                     'income_statement': ['IncomeStatement', 'Income Statement', 'Income_Statement'], 
@@ -46,7 +47,6 @@ def main():
                 sheet_map = {}
                 all_sheets_present = True
                 
-                # Use the same logic as in excel_reader.py
                 for key, variations in sheet_variations.items():
                     found = False
                     for sheet in structure_info['sheets']:
@@ -75,8 +75,12 @@ def main():
                     return
                 continue
                 
-            # Initialize the valuation model
-            valuation_model = ValuationModel(financial_data)
+            # Parse the financial data to extract metrics
+            print("\nParsing financial data...")
+            structured_data = parse_financial_statements(financial_data)
+            
+            # Initialize the valuation model with the structured data
+            valuation_model = ValuationModel(financial_data, structured_data)
 
             # Generate the valuation
             valuation_result = valuation_model.calculate_valuation()
@@ -101,6 +105,8 @@ def main():
             
         except Exception as e:
             print(f"\nAn unexpected error occurred: {str(e)}")
+            import traceback
+            traceback.print_exc()
             if input("\nTry again? (y/n): ").lower() != 'y':
                 return
 

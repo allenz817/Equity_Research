@@ -5,20 +5,81 @@ from .financial_ratios import FinancialRatios
 class ValuationModel:
     """Model for valuing a company based on financial statements"""
     
-    def __init__(self, financial_data):
+    def __init__(self, financial_data, structured_data=None):
         self.financial_data = financial_data
+        self.structured_data = structured_data
         self.balance_sheet = financial_data['balance_sheet']
         self.income_statement = financial_data['income_statement']
         self.cash_flow = financial_data['cash_flow']
-        self.financial_ratios = FinancialRatios(financial_data)
-        self.ratios = self.financial_ratios.calculate_all_ratios()
+        
+        # Use ratios class only if structured data is available
+        if structured_data:
+            self.ratios = self.calculate_ratios()
+        else:
+            self.ratios = {}
     
-    def _safe_get_value(self, df, column_name, default=0):
-        """Safely get a value from a dataframe, handling missing columns"""
-        mapped_name = self.financial_ratios.column_map.get(column_name)
-        if mapped_name is None:
-            return default
-        return df[mapped_name].iloc[-1] if not df[mapped_name].empty else default
+    def calculate_ratios(self):
+        """Calculate key financial ratios"""
+        ratios = {}
+        
+        try:
+            # Get the most recent values
+            bs = self.structured_data['balance_sheet']
+            is_data = self.structured_data['income_statement']
+            
+            # Liquidity ratios
+            if 'CurrentAssets' in bs and 'CurrentLiabilities' in bs:
+                current_assets = bs['CurrentAssets'].get('Year1', 0)
+                current_liabilities = bs['CurrentLiabilities'].get('Year1', 0)
+                inventory = bs.get('Inventory', {}).get('Year1', 0)
+                
+                if current_liabilities != 0:
+                    ratios['current_ratio'] = current_assets / current_liabilities
+                    ratios['quick_ratio'] = (current_assets - inventory) / current_liabilities
+                else:
+                    ratios['current_ratio'] = float('inf')
+                    ratios['quick_ratio'] = float('inf')
+            
+            # Profitability ratios
+            if 'NetIncome' in is_data and 'Revenue' in is_data:
+                net_income = is_data['NetIncome'].get('Year1', 0)
+                revenue = is_data['Revenue'].get('Year1', 0)
+                
+                if revenue != 0:
+                    ratios['profit_margin'] = net_income / revenue
+                else:
+                    ratios['profit_margin'] = 0
+                    
+                if 'TotalAssets' in bs and bs['TotalAssets'].get('Year1', 0) != 0:
+                    ratios['return_on_assets'] = net_income / bs['TotalAssets'].get('Year1', 0)
+                else:
+                    ratios['return_on_assets'] = 0
+                    
+                if 'ShareholdersEquity' in bs and bs['ShareholdersEquity'].get('Year1', 0) != 0:
+                    ratios['return_on_equity'] = net_income / bs['ShareholdersEquity'].get('Year1', 0)
+                else:
+                    ratios['return_on_equity'] = 0
+            
+            # Leverage ratios
+            if 'TotalLiabilities' in bs and 'TotalAssets' in bs:
+                total_liabilities = bs['TotalLiabilities'].get('Year1', 0)
+                total_assets = bs['TotalAssets'].get('Year1', 0)
+                shareholders_equity = bs.get('ShareholdersEquity', {}).get('Year1', 0)
+                
+                if shareholders_equity != 0:
+                    ratios['debt_to_equity'] = total_liabilities / shareholders_equity
+                else:
+                    ratios['debt_to_equity'] = float('inf')
+                    
+                if total_assets != 0:
+                    ratios['debt_ratio'] = total_liabilities / total_assets
+                else:
+                    ratios['debt_ratio'] = 0
+                
+        except Exception as e:
+            print(f"Error calculating ratios: {e}")
+            
+        return ratios
     
     def calculate_dcf_valuation(self, discount_rate=0.10, growth_rate=0.03, forecast_years=5):
         """
@@ -33,17 +94,18 @@ class ValuationModel:
             float: The DCF valuation
         """
         try:
-            # Get the most recent free cash flow
-            fcf = 0
-            free_cash_flow_col = self.financial_ratios.column_map.get('FreeCashFlow')
+            if not self.structured_data:
+                return 0
+                
+            cash_flow = self.structured_data['cash_flow']
+            balance_sheet = self.structured_data['balance_sheet']
             
-            if free_cash_flow_col is not None:
-                fcf = self.cash_flow[free_cash_flow_col].iloc[-1]
-            else:
-                # Calculate FCF if not directly provided
-                operating_cf = self._safe_get_value(self.cash_flow, 'OperatingCashFlow')
-                capital_expenditures = self._safe_get_value(self.cash_flow, 'CapitalExpenditures')
-                fcf = operating_cf - capital_expenditures
+            # Get the most recent operating cash flow
+            operating_cf = cash_flow.get('OperatingCashFlow', {}).get('Year1', 0)
+            capital_exp = cash_flow.get('CapitalExpenditures', {}).get('Year1', 0)
+            
+            # Calculate free cash flow
+            fcf = operating_cf - abs(capital_exp)
             
             if fcf == 0:
                 print("Warning: Free Cash Flow is zero, DCF valuation may not be meaningful")
@@ -67,8 +129,8 @@ class ValuationModel:
             enterprise_value = sum(present_values)
             
             # Adjust for cash and debt
-            cash = self._safe_get_value(self.balance_sheet, 'Cash')
-            debt = self._safe_get_value(self.balance_sheet, 'TotalDebt')
+            cash = balance_sheet.get('Cash', {}).get('Year1', 0)
+            debt = balance_sheet.get('TotalDebt', {}).get('Year1', 0)
             
             # Equity value
             equity_value = enterprise_value + cash - debt
@@ -90,7 +152,11 @@ class ValuationModel:
             float: The earnings-based valuation
         """
         try:
-            net_income = self._safe_get_value(self.income_statement, 'NetIncome')
+            if not self.structured_data:
+                return 0
+                
+            income_statement = self.structured_data['income_statement']
+            net_income = income_statement.get('NetIncome', {}).get('Year1', 0)
             valuation = net_income * pe_multiple
             return valuation
         except Exception as e:
@@ -108,8 +174,12 @@ class ValuationModel:
             float: Asset-based valuation
         """
         try:
-            total_assets = self._safe_get_value(self.balance_sheet, 'TotalAssets')
-            total_liabilities = self._safe_get_value(self.balance_sheet, 'TotalLiabilities')
+            if not self.structured_data:
+                return 0
+                
+            balance_sheet = self.structured_data['balance_sheet']
+            total_assets = balance_sheet.get('TotalAssets', {}).get('Year1', 0)
+            total_liabilities = balance_sheet.get('TotalLiabilities', {}).get('Year1', 0)
             book_value = total_assets - total_liabilities
             
             # Apply discount for conservatism
