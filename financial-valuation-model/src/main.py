@@ -1,10 +1,9 @@
 import pandas as pd
 import os
 from data_processing.excel_reader import read_excel
-from data_processing.excel_inspector import inspect_excel_structure, print_excel_structure
+from data_processing.excel_inspector import inspect_excel_structure
 from data_processing.financial_parser import parse_financial_statements
 from models.valuation import ValuationModel
-from ui.app import App
 
 def main():
     while True:
@@ -30,47 +29,19 @@ def main():
             continue
         
         try:
-            # First, inspect the Excel structure
+            # Inspect the Excel structure
             print("\nInspecting Excel file structure...")
             structure_info = inspect_excel_structure(excel_file_path)
-            if structure_info:
-                print_excel_structure(structure_info)
-                print("\nVerifying that expected sheets exist...")
-                
-                # Define sheet name variations to look for
-                sheet_variations = {
-                    'balance_sheet': ['BalanceSheet', 'Balance Sheet', 'Balance_Sheet'],
-                    'income_statement': ['IncomeStatement', 'Income Statement', 'Income_Statement'], 
-                    'cash_flow': ['CashFlowStatement', 'Cash Flow Statement', 'Cash Flow']
-                }
-                
-                sheet_map = {}
-                all_sheets_present = True
-                
-                for key, variations in sheet_variations.items():
-                    found = False
-                    for sheet in structure_info['sheets']:
-                        if sheet in variations or any(v.lower() == sheet.lower() for v in variations):
-                            sheet_map[key] = sheet
-                            found = True
-                            print(f"Found {key} sheet: '{sheet}'")
-                            break
-                    
-                    if not found:
-                        print(f"Warning: Could not find {key} sheet. Expected one of: {variations}")
-                        all_sheets_present = False
-                
-                if not all_sheets_present:
-                    print(f"\nWarning: Some required sheets are missing. The application expects:")
-                    for key, variations in sheet_variations.items():
-                        print(f"- {key}: any of {variations}")
-                    print("\nAvailable sheets: " + ", ".join(structure_info['sheets']))
-                    if input("\nContinue anyway? (y/n): ").lower() != 'y':
-                        continue
+            if not structure_info:
+                print("Error: Could not inspect the Excel file structure.")
+                if input("Try again? (y/n): ").lower() != 'y':
+                    return
+                continue
             
             # Read the financial statements from the Excel file
             financial_data = read_excel(excel_file_path)
             if not financial_data:
+                print("Error: Could not read financial statements from the Excel file.")
                 if input("Try again? (y/n): ").lower() != 'y':
                     return
                 continue
@@ -85,22 +56,28 @@ def main():
             # Generate the valuation
             valuation_result = valuation_model.calculate_valuation()
 
-            # Display the valuation result
-            print("\nValuation Result:")
-            print(f"DCF Valuation: ${valuation_result['DCF Valuation']:,.2f}")
-            print(f"Earnings Multiple Valuation: ${valuation_result['Earnings Multiple Valuation']:,.2f}")
-            print(f"Asset-Based Valuation: ${valuation_result['Asset-Based Valuation']:,.2f}")
-            print(f"Weighted Valuation: ${valuation_result['Weighted Valuation']:,.2f}")
+            # Save results to a new Excel file
+            output_file_path = os.path.join(os.path.dirname(excel_file_path), "Valuation_Output.xlsx")
+            with pd.ExcelWriter(output_file_path, engine='xlsxwriter') as writer:
+                # Write financial statements
+                for statement, df in structured_data.items():
+                    transposed_df = df.transpose()
+                    transposed_df.columns = transposed_df.iloc[0]  # Set the first row as column headers
+                    transposed_df = transposed_df[1:]  # Remove the first row
+                    transposed_df.to_excel(writer, sheet_name=statement.replace('_', ' ').title())
+                
+                # Write detailed valuation model
+                write_valuation_model(writer, valuation_model, valuation_result)
             
-            # Display financial ratios
-            print("\nFinancial Ratios:")
-            for name, value in valuation_result['Financial Ratios'].items():
-                print(f"{name.replace('_', ' ').title()}: {value:.4f}")
+            # Streamlined terminal output
+            print("\nProcessing complete!")
+            print(f"Parsed financial statements and valuation results have been saved to: {output_file_path}")
+            print("\nValuation Summary:")
+            print(f"  DCF Valuation: ${valuation_result['DCF Valuation']:,.2f}")
+            print(f"  Earnings Multiple Valuation: ${valuation_result['Earnings Multiple Valuation']:,.2f}")
+            print(f"  Asset-Based Valuation: ${valuation_result['Asset-Based Valuation']:,.2f}")
+            print(f"  Weighted Valuation: ${valuation_result['Weighted Valuation']:,.2f}")
             
-            # Start the user interface
-            print("\nLaunching graphical interface...")
-            app = App()
-            app.run()
             break
             
         except Exception as e:
@@ -109,6 +86,74 @@ def main():
             traceback.print_exc()
             if input("\nTry again? (y/n): ").lower() != 'y':
                 return
+
+def write_valuation_model(writer, valuation_model, valuation_result):
+    """
+    Write detailed valuation model to the Excel file.
+    
+    Args:
+        writer (ExcelWriter): The Excel writer object.
+        valuation_model (ValuationModel): The valuation model object.
+        valuation_result (dict): The valuation results.
+    """
+    # Write DCF Valuation
+    dcf_data = valuation_model.get_dcf_details()
+    
+    # Write DCF Assumptions and Summary
+    dcf_assumptions = pd.DataFrame.from_dict(dcf_data['Assumptions'], orient='index', columns=['Value'])
+    dcf_assumptions.to_excel(writer, sheet_name="DCF Valuation", startrow=0, index=True, header=True)
+    
+    dcf_summary = pd.DataFrame({
+        'Metric': ['Free Cash Flow', 'Terminal Value', 'Discounted Terminal Value', 'Enterprise Value', 'Cash', 'Debt', 'Equity Value'],
+        'Value': [
+            dcf_data['Free Cash Flow'],
+            dcf_data['Terminal Value'],
+            dcf_data['Discounted Terminal Value'],
+            dcf_data['Enterprise Value'],
+            dcf_data['Cash'],
+            dcf_data['Debt'],
+            dcf_data['Equity Value']
+        ]
+    })
+    dcf_summary.to_excel(writer, sheet_name="DCF Valuation", startrow=len(dcf_assumptions) + 3, index=False, header=True)
+    
+    # Write DCF Future Cash Flows
+    dcf_future_cash_flows = pd.DataFrame(dcf_data['Future Cash Flows'])
+    dcf_future_cash_flows.to_excel(writer, sheet_name="DCF Valuation", startrow=len(dcf_assumptions) + len(dcf_summary) + 6, index=False, header=True)
+    
+    # Write Multiple Valuation
+    multiple_data = valuation_model.get_multiple_details()
+    multiple_assumptions = pd.DataFrame.from_dict(multiple_data['Assumptions'], orient='index', columns=['Value'])
+    multiple_assumptions.to_excel(writer, sheet_name="Multiple Valuation", startrow=0, index=True, header=True)
+    
+    multiple_summary = pd.DataFrame({
+        'Metric': ['Net Income', 'Valuation'],
+        'Value': [
+            multiple_data['Net Income'],
+            multiple_data['Valuation']
+        ]
+    })
+    multiple_summary.to_excel(writer, sheet_name="Multiple Valuation", startrow=len(multiple_assumptions) + 3, index=False, header=True)
+    
+    # Write Asset-Based Valuation
+    asset_data = valuation_model.get_asset_based_details()
+    asset_assumptions = pd.DataFrame.from_dict(asset_data['Assumptions'], orient='index', columns=['Value'])
+    asset_assumptions.to_excel(writer, sheet_name="Asset-Based Valuation", startrow=0, index=True, header=True)
+    
+    asset_summary = pd.DataFrame({
+        'Metric': ['Total Assets', 'Total Liabilities', 'Book Value', 'Valuation'],
+        'Value': [
+            asset_data['Total Assets'],
+            asset_data['Total Liabilities'],
+            asset_data['Book Value'],
+            asset_data['Valuation']
+        ]
+    })
+    asset_summary.to_excel(writer, sheet_name="Asset-Based Valuation", startrow=len(asset_assumptions) + 3, index=False, header=True)
+    
+    # Write Summary
+    summary_df = pd.DataFrame.from_dict(valuation_result, orient='index', columns=['Value'])
+    summary_df.to_excel(writer, sheet_name="Valuation Summary", index=True, header=True)
 
 if __name__ == "__main__":
     main()

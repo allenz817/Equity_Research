@@ -94,16 +94,14 @@ class ValuationModel:
             float: The DCF valuation
         """
         try:
-            if not self.structured_data:
-                return 0
-                
-            cash_flow = self.structured_data['cash_flow']
-            balance_sheet = self.structured_data['balance_sheet']
-            
             # Get the most recent operating cash flow
-            operating_cf = cash_flow.get('OperatingCashFlow', {}).get('Year1', 0)
-            capital_exp = cash_flow.get('CapitalExpenditures', {}).get('Year1', 0)
-            
+            operating_cf = self.structured_data['cash_flow'].get('OperatingCashFlow', {}).get(2023, 0)
+            capital_exp = self.structured_data['cash_flow'].get('CapitalExpenditures', {}).get(2023, 0)
+
+            # Debug: Print values
+            print(f"Operating Cash Flow (2023): {operating_cf}")
+            print(f"Capital Expenditures (2023): {capital_exp}")
+
             # Calculate free cash flow
             fcf = operating_cf - abs(capital_exp)
             
@@ -129,8 +127,8 @@ class ValuationModel:
             enterprise_value = sum(present_values)
             
             # Adjust for cash and debt
-            cash = balance_sheet.get('Cash', {}).get('Year1', 0)
-            debt = balance_sheet.get('TotalDebt', {}).get('Year1', 0)
+            cash = self.structured_data['balance_sheet'].get('Cash', {}).get('Year1', 0)
+            debt = self.structured_data['balance_sheet'].get('TotalDebt', {}).get('Year1', 0)
             
             # Equity value
             equity_value = enterprise_value + cash - debt
@@ -222,3 +220,115 @@ class ValuationModel:
         }
         
         return results
+
+    def get_dcf_details(self):
+        """
+        Provide detailed DCF valuation data, including assumptions, cash flow projections, and terminal value.
+        
+        Returns:
+            dict: Detailed DCF valuation data.
+        """
+        try:
+            discount_rate = 0.10
+            growth_rate = 0.03
+            forecast_years = 5
+
+            # Get the most recent operating cash flow and capital expenditures
+            operating_cf = self.structured_data['cash_flow'].get('OperatingCashFlow', {}).get(2023, 0)
+            capital_exp = self.structured_data['cash_flow'].get('CapitalExpenditures', {}).get(2023, 0)
+            fcf = operating_cf - abs(capital_exp)
+
+            # Project future cash flows
+            future_cash_flows = []
+            for year in range(1, forecast_years + 1):
+                projected_fcf = fcf * ((1 + growth_rate) ** year)
+                future_cash_flows.append({'Year': 2023 + year, 'Projected FCF': projected_fcf})
+
+            # Calculate terminal value
+            terminal_value = future_cash_flows[-1]['Projected FCF'] * (1 + growth_rate) / (discount_rate - growth_rate)
+
+            # Discount future cash flows and terminal value to present value
+            present_values = []
+            for i, cash_flow in enumerate(future_cash_flows):
+                discounted_value = cash_flow['Projected FCF'] / ((1 + discount_rate) ** (i + 1))
+                present_values.append({'Year': cash_flow['Year'], 'Discounted FCF': discounted_value})
+
+            discounted_terminal_value = terminal_value / ((1 + discount_rate) ** forecast_years)
+
+            # Calculate enterprise value
+            enterprise_value = sum([pv['Discounted FCF'] for pv in present_values]) + discounted_terminal_value
+
+            # Adjust for cash and debt
+            cash = self.structured_data['balance_sheet'].get('Cash', {}).get(2023, 0)
+            debt = self.structured_data['balance_sheet'].get('TotalDebt', {}).get(2023, 0)
+            equity_value = enterprise_value + cash - debt
+
+            # Return detailed DCF data
+            return {
+                'Assumptions': {
+                    'Discount Rate': discount_rate,
+                    'Growth Rate': growth_rate,
+                    'Forecast Years': forecast_years
+                },
+                'Free Cash Flow': fcf,
+                'Future Cash Flows': future_cash_flows,
+                'Terminal Value': terminal_value,
+                'Discounted Terminal Value': discounted_terminal_value,
+                'Enterprise Value': enterprise_value,
+                'Cash': cash,
+                'Debt': debt,
+                'Equity Value': equity_value
+            }
+        except Exception as e:
+            print(f"Error generating DCF details: {e}")
+            return {}
+
+    def get_multiple_details(self):
+        """
+        Provide detailed multiple valuation data, including assumptions and calculations.
+        
+        Returns:
+            dict: Detailed multiple valuation data.
+        """
+        try:
+            pe_multiple = 15
+            net_income = self.structured_data['income_statement'].get('NetIncome', {}).get(2023, 0)
+            valuation = net_income * pe_multiple
+
+            return {
+                'Assumptions': {
+                    'P/E Multiple': pe_multiple
+                },
+                'Net Income': net_income,
+                'Valuation': valuation
+            }
+        except Exception as e:
+            print(f"Error generating multiple valuation details: {e}")
+            return {}
+
+    def get_asset_based_details(self):
+        """
+        Provide detailed asset-based valuation data, including assumptions and calculations.
+        
+        Returns:
+            dict: Detailed asset-based valuation data.
+        """
+        try:
+            discount = 0.1
+            total_assets = self.structured_data['balance_sheet'].get('TotalAssets', {}).get(2023, 0)
+            total_liabilities = self.structured_data['balance_sheet'].get('TotalLiabilities', {}).get(2023, 0)
+            book_value = total_assets - total_liabilities
+            valuation = book_value * (1 - discount)
+
+            return {
+                'Assumptions': {
+                    'Discount': discount
+                },
+                'Total Assets': total_assets,
+                'Total Liabilities': total_liabilities,
+                'Book Value': book_value,
+                'Valuation': valuation
+            }
+        except Exception as e:
+            print(f"Error generating asset-based valuation details: {e}")
+            return {}

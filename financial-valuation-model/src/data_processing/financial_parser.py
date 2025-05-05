@@ -48,11 +48,15 @@ def parse_financial_statements(financial_data):
     cash_flow_metrics = extract_metrics_from_table(
         cash_flow_df,
         {
-            'OperatingCashFlow': ['Cash Flow from Operating Activities', 'Operating Cash Flow'],
-            'CapitalExpenditures': ['Capital Expenditures']
+            'OperatingCashFlow': ['Cash Flow from Operating Activities', 'Operating Cash Flow', 'Net Cash from Operating Activities'],
+            'CapitalExpenditures': ['Capital Expenditures', 'CapEx', 'Purchases of Property and Equipment']
         }
     )
     parsed_data['cash_flow'] = cash_flow_metrics
+
+    # Debug: Print parsed cash flow metrics
+    print("\nParsed Cash Flow Metrics:")
+    print(cash_flow_metrics)
     
     # Print what we found
     print("\nParsed financial metrics:")
@@ -71,36 +75,49 @@ def parse_financial_statements(financial_data):
 
 def extract_metrics_from_table(df, metric_map):
     """
-    Extract metrics from a financial statement table
+    Extract metrics from a financial statement table and align years dynamically.
     
     Args:
         df (DataFrame): Financial statement DataFrame
         metric_map (dict): Mapping of standardized metric names to possible row labels
         
     Returns:
-        dict: Dictionary with extracted metrics
+        dict: Dictionary with extracted metrics, using actual years as keys
     """
-    # Skip header rows (usually 3-4 rows before actual data)
-    # Find the row with "Item" or similar header
+    # Detect the header row containing the year information
     header_row = None
     for i in range(10):  # Check the first 10 rows
         if i >= len(df):
             break
-        if isinstance(df.iloc[i, 0], str) and df.iloc[i, 0].lower() in ['item', 'description', 'account']:
+        if isinstance(df.iloc[i, 1], str) and "20" in df.iloc[i, 1]:  # Look for a year-like string
             header_row = i
             break
     
     if header_row is None:
-        header_row = 4  # Default to row 5 (zero-indexed as 4) if not found
-        
-    # Get the data starting from the row after the header
-    data = df.iloc[header_row+1:].copy()
+        raise ValueError("Could not detect the header row containing year information.")
+    
+    # Rename columns using the detected header row
+    df.columns = df.iloc[header_row]
+    df = df.iloc[header_row + 1:].reset_index(drop=True)
     
     # The first column contains the metric names
     data_col = df.columns[0]
     
-    # The remaining columns should be years
-    year_cols = df.columns[1:4]  # Assuming 3 years of data
+    # Dynamically detect the year columns and sort them in ascending order
+    year_cols = []
+    for col in df.columns[1:]:
+        try:
+            # Attempt to parse the column name as a date
+            year = pd.to_datetime(col, errors='coerce').year
+            if pd.notnull(year):
+                year_cols.append((col, year))
+        except:
+            continue
+    
+    # Sort the year columns by the year value
+    year_cols = sorted(year_cols, key=lambda x: x[1])  # Sort by year (ascending)
+    sorted_year_cols = [col[0] for col in year_cols]  # Extract the column names in sorted order
+    sorted_years = [col[1] for col in year_cols]  # Extract the actual years
     
     # Dictionary to store results
     results = {}
@@ -109,12 +126,12 @@ def extract_metrics_from_table(df, metric_map):
     for standard_name, possible_names in metric_map.items():
         # Try to find a matching row
         for name in possible_names:
-            matching_rows = data[data[data_col].str.lower() == name.lower()]
+            matching_rows = df[df[data_col].str.lower() == name.lower()]
             
             if not matching_rows.empty:
                 # Extract values for each year
                 values = {}
-                for i, year_col in enumerate(year_cols):
+                for i, year_col in enumerate(sorted_year_cols):
                     try:
                         # Handle values that might be formatted with commas or parentheses
                         raw_value = matching_rows.iloc[0][year_col]
@@ -124,13 +141,13 @@ def extract_metrics_from_table(df, metric_map):
                             if '(' in clean_value and ')' in clean_value:
                                 clean_value = '-' + clean_value.replace('(', '').replace(')', '')
                             try:
-                                values[f'Year{i+1}'] = float(clean_value)
+                                values[sorted_years[i]] = float(clean_value)
                             except ValueError:
-                                values[f'Year{i+1}'] = None
+                                values[sorted_years[i]] = None
                         else:
-                            values[f'Year{i+1}'] = float(raw_value) if pd.notnull(raw_value) else None
+                            values[sorted_years[i]] = float(raw_value) if pd.notnull(raw_value) else None
                     except:
-                        values[f'Year{i+1}'] = None
+                        values[sorted_years[i]] = None
                         
                 results[standard_name] = values
                 break
