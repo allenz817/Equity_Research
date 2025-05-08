@@ -7,6 +7,7 @@ from models.valuation import ValuationModel
 
 def main():
     while True:
+<<<<<<< HEAD
         try:
             # Get user input for the Excel file path
             excel_file_path = input("Please enter the path to the Excel file containing the financial statements: ")
@@ -29,6 +30,30 @@ def main():
                     return
                 continue
             
+=======
+        # Get user input for the Excel file path
+        excel_file_path = input("Please enter the path to the Excel file containing the financial statements: ")
+        
+        # Remove quotes if present
+        excel_file_path = excel_file_path.strip('"\'')
+        
+        # Validate file path
+        if not os.path.exists(excel_file_path):
+            print(f"Error: File '{excel_file_path}' does not exist.")
+            if input("Try again? (y/n): ").lower() != 'y':
+                return
+            continue
+            
+        # Check file extension
+        _, ext = os.path.splitext(excel_file_path)
+        if ext.lower() not in ['.xlsx', '.xls']:
+            print(f"Error: File must be an Excel file (.xlsx or .xls). You provided: {ext}")
+            if input("Try again? (y/n): ").lower() != 'y':
+                return
+            continue
+        
+        try:
+>>>>>>> 5b0877a4871a2556cfdd38e23975a065892af108
             # Inspect the Excel structure
             print("\nInspecting Excel file structure...")
             structure_info = inspect_excel_structure(excel_file_path)
@@ -60,7 +85,15 @@ def main():
             output_file_path = os.path.join(os.path.dirname(excel_file_path), "Valuation_Output.xlsx")
             with pd.ExcelWriter(output_file_path, engine='xlsxwriter') as writer:
                 # Write financial statements
+<<<<<<< HEAD
                 write_financial_statements(writer, structured_data)
+=======
+                for statement, df in structured_data.items():
+                    transposed_df = df.transpose()
+                    transposed_df.columns = transposed_df.iloc[0]  # Set the first row as column headers
+                    transposed_df = transposed_df[1:]  # Remove the first row
+                    transposed_df.to_excel(writer, sheet_name=statement.replace('_', ' ').title())
+>>>>>>> 5b0877a4871a2556cfdd38e23975a065892af108
                 
                 # Write detailed valuation model
                 write_valuation_model(writer, valuation_model, valuation_result)
@@ -68,6 +101,15 @@ def main():
             # Streamlined terminal output
             print("\nProcessing complete!")
             print(f"Parsed financial statements and valuation results have been saved to: {output_file_path}")
+<<<<<<< HEAD
+=======
+            print("\nValuation Summary:")
+            print(f"  DCF Valuation: ${valuation_result['DCF Valuation']:,.2f}")
+            print(f"  Earnings Multiple Valuation: ${valuation_result['Earnings Multiple Valuation']:,.2f}")
+            print(f"  Asset-Based Valuation: ${valuation_result['Asset-Based Valuation']:,.2f}")
+            print(f"  Weighted Valuation: ${valuation_result['Weighted Valuation']:,.2f}")
+            
+>>>>>>> 5b0877a4871a2556cfdd38e23975a065892af108
             break
             
         except Exception as e:
@@ -77,6 +119,7 @@ def main():
             if input("\nTry again? (y/n): ").lower() != 'y':
                 return
 
+<<<<<<< HEAD
 def write_financial_statements(writer, structured_data):
     """
     Write all financial statements (Income Statement, Balance Sheet, Cash Flow Statement) to the Excel file.
@@ -100,6 +143,8 @@ def write_financial_statements(writer, structured_data):
         # Write the transposed DataFrame to the Excel file
         transposed_df.to_excel(writer, sheet_name=statement_name.replace('_', ' ').title(), index=False, header=True)
 
+=======
+>>>>>>> 5b0877a4871a2556cfdd38e23975a065892af108
 def write_valuation_model(writer, valuation_model, valuation_result):
     """
     Write detailed valuation model to the Excel file.
