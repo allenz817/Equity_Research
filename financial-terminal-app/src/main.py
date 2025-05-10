@@ -1,8 +1,11 @@
 import os
 import json
+import time  # Add this
+import re    # Add this
 from dotenv import load_dotenv
 from google.cloud import aiplatform
-from vertexai.preview.generative_models import GenerativeModel
+# Make sure you're using the stable API, not preview
+from vertexai.generative_models import GenerativeModel
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,8 +22,10 @@ def fetch_stock_data_with_gemini(ticker):
     """Use Gemini via Vertex AI to fetch financial data for a given ticker"""
     
     try:
-        # Initialize the model - using the fully qualified model name
-        model = GenerativeModel("gemini-1.5-pro")  # Updated model name format
+        # Initialize the model with the fully qualified name
+        model = GenerativeModel(
+            "projects/exemplary-torch-442014-s1/locations/us-central1/publishers/google/models/gemini-pro"
+        )
         
         prompt = f"""
         Please provide the current financial information for {ticker} stock.
@@ -61,19 +66,36 @@ def fetch_stock_data_with_gemini(ticker):
         If any data is not available, include the field with "N/A" as the value. No explanations or markdown, JUST the JSON.
         """
         
-        response = model.generate_content(prompt)
+        # Add timeout handling
+        import time
+        start_time = time.time()
+        max_time = 10  # seconds
+        
+        response = model.generate_content(prompt, timeout=max_time)
         # Extract the text from the response
         response_text = response.text
         
-        # Sometimes Gemini might include markdown code blocks, so let's clean that
-        if "```json" in response_text:
-            response_text = response_text.split("```json")[1].split("```")[0].strip()
-        elif "```" in response_text:
-            response_text = response_text.split("```")[1].split("```")[0].strip()
+        # Improve JSON extraction with a more robust approach
+        import re
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```|({[\s\S]*})', response_text)
+        if json_match:
+            json_str = json_match.group(1) or json_match.group(2)
+            json_str = json_str.strip()
+        else:
+            json_str = response_text.strip()
             
         # Parse the JSON
-        stock_data = json.loads(response_text)
+        stock_data = json.loads(json_str)
+        
+        # Validate the returned data has required fields
+        required_fields = ["company_name", "current_price"]
+        for field in required_fields:
+            if field not in stock_data or not stock_data[field]:
+                raise Exception(f"Invalid response: missing {field}")
+                
         return stock_data
+    except TimeoutError:
+        raise Exception("Request timed out. Please try again later.")
     except Exception as e:
         raise Exception(f"Error processing Vertex AI response: {str(e)}")
 
@@ -107,8 +129,19 @@ def main():
     print("Welcome to the Financial Data App!")
     print("Using Vertex AI with Gemini to fetch real-time financial information")
     
+    # List available models
+    try:
+        print("\nChecking available models...")
+        from vertexai.generative_models import GenerativeModel
+        models = GenerativeModel.list_models()
+        print("Available models:")
+        for model in models:
+            print(f" - {model}")
+    except Exception as e:
+        print(f"Error listing models: {str(e)}")
+    
     while True:
-        ticker = input("\nEnter the stock ticker symbol (e.g., AAPL, MSFT) or 'q' to quit: ")
+        ticker = input("\nEnter the stock ticker symbol (e.g., AAPL, MSFT) or 'q' to quit: ").strip().upper()
         
         if ticker.lower() == 'q':
             print("Exiting application. Thank you!")
@@ -116,6 +149,11 @@ def main():
             
         if not ticker:
             print("Please enter a valid ticker symbol.")
+            continue
+        
+        # Add basic ticker validation
+        if not ticker.isalpha() or len(ticker) > 5:
+            print("Please enter a valid ticker symbol (alphabetic characters only, max 5 characters).")
             continue
         
         try:
