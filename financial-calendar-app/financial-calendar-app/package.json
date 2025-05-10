@@ -1,0 +1,27 @@
+{
+  "name": "financial-calendar-app",
+  "version": "1.0.0",
+  "description": "A financial calendar app that retrieves key market events using AI models",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "lite-server",
+    "dev": "concurrently \"npm run build -- --watch\" \"npm run start\""
+  },
+  "dependencies": {
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "lite-server": "^2.6.1"
+  },
+  "keywords": [
+    "financial",
+    "calendar",
+    "market",
+    "events",
+    "AI"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
