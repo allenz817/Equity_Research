@@ -586,12 +586,61 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="flex items-center mt-2 ml-1">
+                          <input type="checkbox" id="isPrivateCompany" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 dark:border-gray-600 rounded">
+                          <label for="isPrivateCompany" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Private company (no ticker symbol)
+                          </label>
+                        </div>
+                        
+                        <div id="privateCompanyFields" class="hidden mt-3 p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-750">
+                          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Private Company Information</h4>
+                          
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1" for="privateCompanyIndustry">Industry</label>
+                              <input type="text" id="privateCompanyIndustry" placeholder="e.g., Software, Biotech, Retail" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1" for="privateCompanySector">Sector</label>
+                              <input type="text" id="privateCompanySector" placeholder="e.g., Technology, Healthcare" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1" for="privateCompanyRevenue">Estimated Revenue ($M)</label>
+                              <input type="number" id="privateCompanyRevenue" placeholder="e.g., 500" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1" for="privateCompanyEmployees">Number of Employees</label>
+                              <input type="number" id="privateCompanyEmployees" placeholder="e.g., 1000" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1" for="privateCompanyDescription">Company Description</label>
+                            <textarea id="privateCompanyDescription" placeholder="Brief description of the company's business model, products/services, and target market" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                          </div>
+                          
+                          <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-gray-600 dark:text-gray-400">
+                            <p><strong>Note:</strong> When analyzing private companies, the tool will find publicly traded comparable companies based on the information provided. The analysis is intended to provide valuation context through public market multiples that can be applied to the private company.</p>
+                          </div>
+                        </div>
+
                         <div class="flex items-center">
                             <select id="comparablesModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
                                 <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
+
                         <button id="fetchComparablesBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
                             <span>Fetch Comparable Companies</span>
                         </button>
@@ -6482,19 +6531,23 @@ Provide accurate, up-to-date information about the company's industry, its marke
             });
         }
         
-        // Function to fetch comparable companies data
-        async function fetchComparablesData(ticker) {
+        // Function to fetch comparable companies data //4
+        async function fetchComparablesData(nameOrTicker) {
             // Update all ticker inputs across pages
-            updateAllTickerInputs(ticker);
+            updateAllTickerInputs(nameOrTicker);
             
             // Show loading indicator
             document.getElementById('comparablesLoadingIndicator').classList.remove('hidden');
             document.getElementById('comparablesContent').classList.add('hidden');
             
-            // For AAPL, use demo data
-            if (ticker.toUpperCase() === 'AAPL') {
-                displayMessage("Using pre-loaded sample comparable companies data for Apple Inc.", "info");
-                
+            // Check if we're dealing with a private company
+            const isPrivate = document.getElementById('isPrivateCompany').checked;
+            
+            // Handle AAPL demo data the same way
+            if (!isPrivate && nameOrTicker.toUpperCase() === 'AAPL') {
+                // Existing AAPL demo code
+                displayMessage("Using pre-loaded sample data for Apple Inc. comparable companies", "info");
+            
                 // Sample comparable companies data for Apple
                 const comparablesData = {
                     "companyName": "Apple Inc.",
@@ -6648,8 +6701,126 @@ Provide accurate, up-to-date information about the company's industry, its marke
                 const modelType = getSelectedModel('comparables');
                 const modelName = modelType === 'pro' ? 'Gemini-2.5-Pro-Exp' : 'Gemini-2.5-Flash-Preview';
                 
-                displayMessage(`Fetching comparable companies data for ${ticker}... This may take up to one minute.`, "info");
+                let promptText;
                 
+                if (isPrivate) {
+                // Get private company details
+                const companyName = nameOrTicker;
+                const industry = document.getElementById('privateCompanyIndustry').value;
+                const sector = document.getElementById('privateCompanySector').value;
+                const revenue = document.getElementById('privateCompanyRevenue').value;
+                const employees = document.getElementById('privateCompanyEmployees').value;
+                const description = document.getElementById('privateCompanyDescription').value;
+                
+                displayMessage(`Finding comparable public companies for ${companyName}... This may take up to one minute.`, "info");
+                
+                // Modified prompt for private companies
+                promptText = `${modelType === 'pro' ? '@Gemini-2.5-Pro-Exp' : '@Gemini-2.5-Flash-Preview'}
+            I need to find public companies that are comparable to a private company in the same industry. Please provide detailed comparable companies data in a specific JSON format. Please provide ONLY the JSON object with no additional text:
+
+            \`\`\`json
+            {
+            "companyName": "${companyName}",
+            "ticker": "Private",
+            "industry": "${industry || 'Unknown'}",
+            "sector": "${sector || 'Unknown'}",
+            "dataDate": "Current date",
+            "companies": [
+                {
+                "name": "${companyName}",
+                "ticker": "Private",
+                "description": "${description || 'Private company'}",
+                "marketCap": "Private",
+                "revenue": "${revenue ? '$' + revenue + 'M' : 'Unknown'}",
+                "revenueGrowth": "N/A",
+                "grossMargin": "N/A",
+                "operatingMargin": "N/A",
+                "netMargin": "N/A",
+                "pe": "N/A",
+                "ps": "N/A",
+                "pb": "N/A",
+                "evEbitda": "N/A",
+                "roe": "N/A",
+                "isSubject": true
+                },
+                {
+                "name": "Comparable Company 1",
+                "ticker": "COMP1",
+                "description": "Brief business description",
+                "marketCap": "80B",
+                "revenue": "40B",
+                "revenueGrowth": "8.2%",
+                "grossMargin": "42.0%",
+                "operatingMargin": "22.0%",
+                "netMargin": "18.0%",
+                "pe": 18.4,
+                "ps": 3.8,
+                "pb": 7.2,
+                "evEbitda": 14.1,
+                "roe": "16.3%",
+                "isSubject": false
+                }
+            ]
+            }
+            \`\`\`
+
+            Please find 6-8 publicly traded companies in the ${industry || 'same'} industry that would be suitable comparables for ${companyName}. Consider company size, business model, market focus, and growth stage. For the subject company (${companyName}), mark it with "isSubject": true. For each comparable public company, include ticker symbol, brief description, key financial metrics, and valuation multiples using the most current financial data available.`;
+                } else {
+                // The original prompt for public companies
+                displayMessage(`Fetching comparable companies data for ${nameOrTicker}... This may take up to one minute.`, "info");
+                
+                promptText = `${modelType === 'pro' ? '@Gemini-2.5-Pro-Exp' : '@Gemini-2.5-Flash-Preview'} 
+            I need detailed comparable companies data for ${nameOrTicker} in a specific JSON format. Please provide ONLY the JSON object with no additional text:
+
+            \`\`\`json
+            {
+            "companyName": "Full company name",
+            "ticker": "${nameOrTicker}",
+            "industry": "Specific industry",
+            "sector": "Broader sector",
+            "dataDate": "Current date",
+            "companies": [
+                {
+                "name": "Subject Company Name",
+                "ticker": "${Ticker}",
+                "description": "Brief business description",
+                "marketCap": "100B",
+                "revenue": "50B",
+                "revenueGrowth": "10.5%",
+                "grossMargin": "45.0%",
+                "operatingMargin": "25.0%",
+                "netMargin": "20.0%",
+                "pe": 20.5,
+                "ps": 4.2,
+                "pb": 8.7,
+                "evEbitda": 15.3,
+                "roe": "18.5%",
+                "isSubject": true
+                },
+                {
+                "name": "Comparable Company 1",
+                "ticker": "COMP1",
+                "description": "Brief business description",
+                "marketCap": "80B",
+                "revenue": "40B",
+                "revenueGrowth": "8.2%",
+                "grossMargin": "42.0%",
+                "operatingMargin": "22.0%",
+                "netMargin": "18.0%",
+                "pe": 18.4,
+                "ps": 3.8,
+                "pb": 7.2,
+                "evEbitda": 14.1,
+                "roe": "16.3%",
+                "isSubject": false
+                }
+            ]
+            }
+            \`\`\`
+
+            Please include 6-8 of the most relevant comparable companies in the same industry with similar business models or market positions. For the subject company (${nameOrTicker}) itself, provide a flag "isSubject": true. For each company, include a brief business description, key financial metrics, and valuation multiples. Use the most current financial data available.`;
+                }
+
                 // Register handler for comparables data
                 const handlerId = `comparables-${Date.now()}`;
                 
@@ -6697,12 +6868,12 @@ Provide accurate, up-to-date information about the company's industry, its marke
                 // Construct prompt for AI to get comparable companies data
                 const botName = modelType === 'pro' ? '@Gemini-2.5-Pro-Exp' : '@Gemini-2.5-Flash-Preview';
                 const prompt = `${botName} 
-        I need detailed comparable companies data for ${ticker} in a specific JSON format. Please provide ONLY the JSON object with no additional text:
+        I need detailed comparable companies data for ${nameOrTicker} in a specific JSON format. Please provide ONLY the JSON object with no additional text:
 
         \`\`\`json
         {
         "companyName": "Full company name",
-        "ticker": "${ticker}",
+        "ticker": "${nameOrTicker}",
         "industry": "Specific industry",
         "sector": "Broader sector",
         "dataDate": "Current date",
@@ -6745,7 +6916,7 @@ Provide accurate, up-to-date information about the company's industry, its marke
         }
         \`\`\`
 
-        Please include 6-8 of the most relevant comparable companies in the same industry with similar business models or market positions. For the subject company (${ticker}) itself, provide a flag "isSubject": true. For each company, include a brief business description, key financial metrics, and valuation multiples. Use the most current financial data available.`;
+        Please include 6-8 of the most relevant comparable companies in the same industry with similar business models or market positions. For the subject company (${nameOrTicker}) itself, provide a flag "isSubject": true. For each company, include a brief business description, key financial metrics, and valuation multiples. Use the most current financial data available.`;
                 
                 // Send prompt to fetch comparable companies data
                 await window.Poe.sendUserMessage(prompt, {
@@ -6785,23 +6956,34 @@ Provide accurate, up-to-date information about the company's industry, its marke
 
         // Function to update the comparable companies UI
         function updateComparablesUI(data) {
-            // Update basic information
-            document.getElementById('comparablesCompanyName').textContent = data.companyName + " (" + data.ticker + ")";
-            document.getElementById('comparablesIndustry').textContent = data.industry;
-            document.getElementById('comparablesSector').textContent = data.sector;
-            document.getElementById('comparablesDate').textContent = `Data as of: ${data.dataDate}`;
-            
-            // Update the comparables table
-            updateComparablesTable(data.companies);
-            
-            // Create valuation multiples chart
-            createValuationMultiplesChart(data.companies);
-            
-            // Create profitability metrics chart
-            createProfitabilityMetricsChart(data.companies);
-            
-            // Update company details cards
-            updateCompanyDetailsCards(data.companies);
+        // Update basic information
+        document.getElementById('comparablesCompanyName').textContent = data.companyName + (data.ticker !== "Private" ? ` (${data.ticker})` : " (Private)");
+        document.getElementById('comparablesIndustry').textContent = data.industry;
+        document.getElementById('comparablesSector').textContent = data.sector;
+        document.getElementById('comparablesDate').textContent = `Data as of: ${data.dataDate}`;
+        
+        // Update the comparables table
+        updateComparablesTable(data.companies);
+        
+        // Create valuation multiples chart - only include companies with numeric data
+        const companiesWithMetrics = data.companies.filter(company => 
+            typeof company.pe === 'number' || 
+            typeof company.ps === 'number' ||
+            typeof company.pb === 'number' ||
+            typeof company.evEbitda === 'number'
+        );
+        
+        if (companiesWithMetrics.length > 1) {
+            createValuationMultiplesChart(companiesWithMetrics);
+            createProfitabilityMetricsChart(companiesWithMetrics);
+        } else {
+            // Hide charts if not enough numeric data
+            document.getElementById('valuationMultiplesChart').parentElement.classList.add('hidden');
+            document.getElementById('profitabilityMetricsChart').parentElement.classList.add('hidden');
+        }
+        
+        // Update company details cards
+        updateCompanyDetailsCards(data.companies);
         }
 
         // Function to update the comparables table
@@ -7279,18 +7461,48 @@ Provide accurate, up-to-date information about the company's industry, its marke
 
         // Event listeners for Comparable Companies page
         document.getElementById('nav-comparables').addEventListener('click', () => showPage('page-comparables'));
-
-        document.getElementById('fetchComparablesBtn').addEventListener('click', function() {
-            const ticker = document.getElementById('comparablesTickerInput').value.trim();
-            if (!ticker) {
-                displayMessage("Please enter a stock ticker.", "error");
-                return;
+        
+        document.getElementById('isPrivateCompany').addEventListener('change', function() {
+            const isPrivate = this.checked;
+            const tickerInput = document.getElementById('comparablesTickerInput');
+            const privateCompanyFields = document.getElementById('privateCompanyFields');
+            
+            if(isPrivate) {
+                tickerInput.placeholder = "Company name (e.g., SpaceX, Stripe)";
+                tickerInput.value = "";
+                privateCompanyFields.classList.remove('hidden');
+            } else {
+                tickerInput.placeholder = "Enter stock ticker (e.g., AAPL, MSFT, GOOGL)";
+                privateCompanyFields.classList.add('hidden');
             }
-            fetchComparablesData(ticker);
         });
-
-        document.getElementById('comparablesTickerInput').addEventListener('input', function() {
-            updateAllTickerInputs(this.value.trim());
+        
+        document.getElementById('fetchComparablesBtn').addEventListener('click', function() {
+        const isPrivate = document.getElementById('isPrivateCompany').checked;
+        const input = document.getElementById('comparablesTickerInput').value.trim();
+        
+        if (!input) {
+            displayMessage("Please enter a " + (isPrivate ? "company name" : "stock ticker"), "error");
+            return;
+        }
+        
+        // If it's a private company, check for required fields
+        if (isPrivate) {
+            const industry = document.getElementById('privateCompanyIndustry').value.trim();
+            const description = document.getElementById('privateCompanyDescription').value.trim();
+            
+            if (!industry) {
+            displayMessage("Please enter the industry for the private company", "error");
+            return;
+            }
+            
+            if (!description) {
+            displayMessage("Please provide a brief description of the private company", "error");
+            return;
+            }
+        }
+        
+        fetchComparablesData(input);
         });
 
         document.querySelector('.comparables-quick-btn').addEventListener('click', function() {

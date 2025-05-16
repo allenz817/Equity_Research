@@ -60,6 +60,9 @@
             <button id="nav-industry" class="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition-colors">
                 Industry Analysis
             </button>
+                <button id="nav-comparables" class="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition-colors">
+                Comparable Companies
+            </button>
             <button id="nav-financials" class="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition-colors">
                 Financial Statements
             </button>
@@ -562,6 +565,163 @@
                         <ul id="industrySourcesList" class="list-disc pl-5 space-y-1">
                             <li>No specific sources cited yet. The AI draws from multiple financial databases, market research reports, and publicly available information.</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Page: Comparable Companies -->
+        <div id="page-comparables" class="page-content hidden">
+            <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Comparable Companies Analysis</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">Compare key financial metrics and valuation multiples across similar companies in the same sector.</p>
+                
+                <div class="mb-6">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <div class="flex-grow">
+                            <div class="relative">
+                                <input type="text" id="comparablesTickerInput" placeholder="Enter stock ticker (e.g., AAPL, MSFT, GOOGL)" 
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-base">
+                                <div class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <select id="comparablesModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
+                            </select>
+                        </div>
+                        <button id="fetchComparablesBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
+                            <span>Fetch Comparable Companies</span>
+                        </button>
+                    </div>
+                    
+                    <div id="comparablesList" class="mt-2 text-gray-600 dark:text-gray-400 text-sm">
+                        <div class="mt-1 flex flex-wrap gap-1">
+                            <button class="comparables-quick-btn px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 border border-blue-200 dark:border-blue-800 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                AAPL Demo Mode
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading indicator -->
+                <div id="comparablesLoadingIndicator" class="hidden py-20">
+                    <div class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        <span class="ml-3 text-gray-600 dark:text-gray-400 text-lg">Loading comparable companies data...</span>
+                    </div>
+                </div>
+
+                <!-- Comparable Companies Content -->
+                <div id="comparablesContent" class="hidden">
+                    <div class="mb-4">
+                        <h3 id="comparablesCompanyName" class="text-xl font-semibold text-gray-800 dark:text-white"></h3>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Industry: <span id="comparablesIndustry" class="font-medium"></span> | 
+                                Sector: <span id="comparablesSector" class="font-medium"></span>
+                            </p>
+                            <p id="comparablesDate" class="text-sm text-gray-500 dark:text-gray-400">Data as of: </p>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Metrics Selector -->
+                    <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-750 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comparison Metrics</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-pe" class="metric-checkbox mr-2" value="pe" checked>
+                                <label for="metric-pe" class="text-sm text-gray-600 dark:text-gray-400">P/E Ratio</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-ps" class="metric-checkbox mr-2" value="ps" checked>
+                                <label for="metric-ps" class="text-sm text-gray-600 dark:text-gray-400">P/S Ratio</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-pb" class="metric-checkbox mr-2" value="pb" checked>
+                                <label for="metric-pb" class="text-sm text-gray-600 dark:text-gray-400">P/B Ratio</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-evebitda" class="metric-checkbox mr-2" value="evebitda" checked>
+                                <label for="metric-evebitda" class="text-sm text-gray-600 dark:text-gray-400">EV/EBITDA</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-gpm" class="metric-checkbox mr-2" value="gpm" checked>
+                                <label for="metric-gpm" class="text-sm text-gray-600 dark:text-gray-400">Gross Margin</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-opm" class="metric-checkbox mr-2" value="opm" checked>
+                                <label for="metric-opm" class="text-sm text-gray-600 dark:text-gray-400">Op. Margin</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-npm" class="metric-checkbox mr-2" value="npm" checked>
+                                <label for="metric-npm" class="text-sm text-gray-600 dark:text-gray-400">Net Margin</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="metric-roe" class="metric-checkbox mr-2" value="roe" checked>
+                                <label for="metric-roe" class="text-sm text-gray-600 dark:text-gray-400">ROE</label>
+                            </div>
+                        </div>
+                        <div class="text-right mt-2">
+                            <button id="updateComparablesTable" class="px-2 py-1 text-xs bg-primary text-white rounded-md">Update Table</button>
+                        </div>
+                    </div>
+
+                    <!-- Comparables Table -->
+                    <div class="overflow-x-auto mb-6 border border-gray-300 dark:border-gray-700 rounded-lg">
+                        <table class="min-w-full bg-white dark:bg-gray-800">
+                            <thead>
+                                <tr class="bg-gray-100 dark:bg-gray-700">
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider sticky left-0 bg-gray-100 dark:bg-gray-700">Company</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Market Cap</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Revenue (TTM)</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Revenue Growth</th>
+                                    <th class="metric-col pe py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">P/E</th>
+                                    <th class="metric-col ps py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">P/S</th>
+                                    <th class="metric-col pb py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">P/B</th>
+                                    <th class="metric-col evebitda py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">EV/EBITDA</th>
+                                    <th class="metric-col gpm py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Gross Margin</th>
+                                    <th class="metric-col opm py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Op. Margin</th>
+                                    <th class="metric-col npm py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Net Margin</th>
+                                    <th class="metric-col roe py-3 px-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">ROE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparablesTableBody">
+                                <!-- Will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Valuation Multiples Visualization -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Valuation Multiples Chart -->
+                        <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Valuation Multiples</h4>
+                            <div class="h-72">
+                                <canvas id="valuationMultiplesChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Profitability Metrics Chart -->
+                        <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Profitability Metrics</h4>
+                            <div class="h-72">
+                                <canvas id="profitabilityMetricsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Details Cards -->
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Company Details</h4>
+                        <div id="companyDetailsCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Will be populated dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1379,6 +1539,8 @@
             valuation: null,
             analyst: null,
             stock: null,
+            industry: null,
+            comparables: null,
             currentTicker: '' // Store the current ticker across all pages
         };
 
@@ -6319,6 +6481,833 @@ Provide accurate, up-to-date information about the company's industry, its marke
                 threatsList.appendChild(li);
             });
         }
+        
+        // Function to fetch comparable companies data
+        async function fetchComparablesData(ticker) {
+            // Update all ticker inputs across pages
+            updateAllTickerInputs(ticker);
+            
+            // Show loading indicator
+            document.getElementById('comparablesLoadingIndicator').classList.remove('hidden');
+            document.getElementById('comparablesContent').classList.add('hidden');
+            
+            // For AAPL, use demo data
+            if (ticker.toUpperCase() === 'AAPL') {
+                displayMessage("Using pre-loaded sample comparable companies data for Apple Inc.", "info");
+                
+                // Sample comparable companies data for Apple
+                const comparablesData = {
+                    "companyName": "Apple Inc.",
+                    "ticker": "AAPL",
+                    "industry": "Consumer Electronics",
+                    "sector": "Technology",
+                    "dataDate": "July 2025",
+                    "companies": [
+                        {
+                            "name": "Apple Inc.",
+                            "ticker": "AAPL",
+                            "description": "Designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+                            "marketCap": "3.2T",
+                            "revenue": "394.3B",
+                            "revenueGrowth": "7.8%",
+                            "grossMargin": "43.2%",
+                            "operatingMargin": "30.1%",
+                            "netMargin": "25.3%",
+                            "pe": 32.4,
+                            "ps": 8.1,
+                            "pb": 48.3,
+                            "evEbitda": 24.6,
+                            "roe": "165.3%",
+                            "isSubject": true
+                        },
+                        {
+                            "name": "Microsoft Corporation",
+                            "ticker": "MSFT",
+                            "description": "Develops, licenses, and sells software, services, devices, and solutions worldwide with focus on cloud computing and software.",
+                            "marketCap": "2.9T",
+                            "revenue": "211.9B",
+                            "revenueGrowth": "15.6%",
+                            "grossMargin": "68.3%",
+                            "operatingMargin": "42.9%",
+                            "netMargin": "35.7%",
+                            "pe": 36.2,
+                            "ps": 13.7,
+                            "pb": 15.8,
+                            "evEbitda": 25.1,
+                            "roe": "43.2%",
+                            "isSubject": false
+                        },
+                        {
+                            "name": "Alphabet Inc.",
+                            "ticker": "GOOGL",
+                            "description": "Provides online advertising services, search engine, cloud computing, software and hardware products.",
+                            "marketCap": "1.9T",
+                            "revenue": "307.4B",
+                            "revenueGrowth": "13.2%",
+                            "grossMargin": "56.1%",
+                            "operatingMargin": "27.5%",
+                            "netMargin": "23.7%",
+                            "pe": 25.9,
+                            "ps": 6.2,
+                            "pb": 8.4,
+                            "evEbitda": 16.7,
+                            "roe": "29.8%",
+                            "isSubject": false
+                        },
+                        {
+                            "name": "Amazon.com Inc.",
+                            "ticker": "AMZN",
+                            "description": "Engages in e-commerce retail, digital streaming, cloud computing services, and artificial intelligence.",
+                            "marketCap": "1.8T",
+                            "revenue": "574.8B",
+                            "revenueGrowth": "11.7%",
+                            "grossMargin": "46.9%",
+                            "operatingMargin": "7.8%",
+                            "netMargin": "5.2%",
+                            "pe": 60.1,
+                            "ps": 3.1,
+                            "pb": 11.2,
+                            "evEbitda": 23.8,
+                            "roe": "17.5%",
+                            "isSubject": false
+                        },
+                        {
+                            "name": "Meta Platforms Inc.",
+                            "ticker": "META",
+                            "description": "Develops social media applications and virtual/augmented reality technology.",
+                            "marketCap": "1.2T",
+                            "revenue": "134.9B",
+                            "revenueGrowth": "16.4%",
+                            "grossMargin": "80.9%",
+                            "operatingMargin": "38.3%",
+                            "netMargin": "32.6%",
+                            "pe": 27.5,
+                            "ps": 8.9,
+                            "pb": 9.3,
+                            "evEbitda": 18.2,
+                            "roe": "31.2%",
+                            "isSubject": false
+                        },
+                        {
+                            "name": "NVIDIA Corporation",
+                            "ticker": "NVDA",
+                            "description": "Designs graphics processing units and system on chip units for gaming, crypto mining, and AI applications.",
+                            "marketCap": "2.4T",
+                            "revenue": "60.9B",
+                            "revenueGrowth": "125.3%",
+                            "grossMargin": "73.2%",
+                            "operatingMargin": "53.6%",
+                            "netMargin": "48.9%",
+                            "pe": 65.3,
+                            "ps": 39.4,
+                            "pb": 54.1,
+                            "evEbitda": 56.7,
+                            "roe": "83.7%",
+                            "isSubject": false
+                        },
+                        {
+                            "name": "Samsung Electronics Co.",
+                            "ticker": "SSNLF",
+                            "description": "Manufactures consumer electronics including smartphones, televisions, and memory chips.",
+                            "marketCap": "378.2B",
+                            "revenue": "234.5B",
+                            "revenueGrowth": "2.5%",
+                            "grossMargin": "36.4%",
+                            "operatingMargin": "14.2%",
+                            "netMargin": "11.8%",
+                            "pe": 16.3,
+                            "ps": 1.6,
+                            "pb": 1.8,
+                            "evEbitda": 8.4,
+                            "roe": "11.2%",
+                            "isSubject": false
+                        }
+                    ]
+                };
+                
+                // Store in the data store
+                dataStore.comparables = comparablesData;
+                
+                // Update UI
+                updateComparablesUI(comparablesData);
+                
+                // Hide loading indicator
+                document.getElementById('comparablesLoadingIndicator').classList.add('hidden');
+                
+                // Show comparables content
+                document.getElementById('comparablesContent').classList.remove('hidden');
+                
+                // Show success message
+                displayMessage("Successfully loaded comparable companies data for Apple Inc.", "success");
+                
+                return comparablesData;
+            }
+            
+            // For other tickers, get real data from AI model
+            try {
+                const modelType = getSelectedModel('comparables');
+                const modelName = modelType === 'pro' ? 'Gemini-2.5-Pro-Exp' : 'Gemini-2.5-Flash-Preview';
+                
+                displayMessage(`Fetching comparable companies data for ${ticker}... This may take up to one minute.`, "info");
+                
+                // Register handler for comparables data
+                const handlerId = `comparables-${Date.now()}`;
+                
+                // Create a Promise for handling the response
+                const responsePromise = new Promise((resolve, reject) => {
+                    window.Poe.registerHandler(handlerId, (result, context) => {
+                        if (result.status === "error") {
+                            reject(new Error(result.responses[0]?.statusText || "Error fetching comparable companies data"));
+                            return;
+                        }
+                        
+                        if (result.status === "complete") {
+                            const response = result.responses[0];
+                            try {
+                                // Parse the JSON data from the model's response
+                                const responseText = response.content;
+                                let comparablesData;
+                                
+                                // Extract JSON data from the response
+                                const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+                                                responseText.match(/```([\s\S]*?)```/);
+                                                
+                                if (jsonMatch && jsonMatch[1]) {
+                                    comparablesData = JSON.parse(jsonMatch[1]);
+                                } else {
+                                    // Try to extract a JSON object without code blocks
+                                    const jsonPattern = /\{[\s\S]*\}/;
+                                    const match = responseText.match(jsonPattern);
+                                    if (match) {
+                                        comparablesData = JSON.parse(match[0]);
+                                    } else {
+                                        throw new Error("Unable to parse JSON data from response");
+                                    }
+                                }
+                                
+                                resolve(comparablesData);
+                            } catch (error) {
+                                console.error("Error parsing comparable companies data:", error);
+                                reject(new Error("Failed to parse comparable companies data: " + error.message));
+                            }
+                        }
+                    });
+                });
+                
+                // Construct prompt for AI to get comparable companies data
+                const botName = modelType === 'pro' ? '@Gemini-2.5-Pro-Exp' : '@Gemini-2.5-Flash-Preview';
+                const prompt = `${botName} 
+        I need detailed comparable companies data for ${ticker} in a specific JSON format. Please provide ONLY the JSON object with no additional text:
+
+        \`\`\`json
+        {
+        "companyName": "Full company name",
+        "ticker": "${ticker}",
+        "industry": "Specific industry",
+        "sector": "Broader sector",
+        "dataDate": "Current date",
+        "companies": [
+            {
+            "name": "Subject Company Name",
+            "ticker": "${ticker}",
+            "description": "Brief business description",
+            "marketCap": "100B",
+            "revenue": "50B",
+            "revenueGrowth": "10.5%",
+            "grossMargin": "45.0%",
+            "operatingMargin": "25.0%",
+            "netMargin": "20.0%",
+            "pe": 20.5,
+            "ps": 4.2,
+            "pb": 8.7,
+            "evEbitda": 15.3,
+            "roe": "18.5%",
+            "isSubject": true
+            },
+            {
+            "name": "Comparable Company 1",
+            "ticker": "COMP1",
+            "description": "Brief business description",
+            "marketCap": "80B",
+            "revenue": "40B",
+            "revenueGrowth": "8.2%",
+            "grossMargin": "42.0%",
+            "operatingMargin": "22.0%",
+            "netMargin": "18.0%",
+            "pe": 18.4,
+            "ps": 3.8,
+            "pb": 7.2,
+            "evEbitda": 14.1,
+            "roe": "16.3%",
+            "isSubject": false
+            }
+        ]
+        }
+        \`\`\`
+
+        Please include 6-8 of the most relevant comparable companies in the same industry with similar business models or market positions. For the subject company (${ticker}) itself, provide a flag "isSubject": true. For each company, include a brief business description, key financial metrics, and valuation multiples. Use the most current financial data available.`;
+                
+                // Send prompt to fetch comparable companies data
+                await window.Poe.sendUserMessage(prompt, {
+                    handler: handlerId,
+                    openChat: false
+                });
+                
+                // Wait for the response
+                const comparablesData = await responsePromise;
+                
+                // Store in the data store
+                dataStore.comparables = comparablesData;
+                
+                // Update UI
+                updateComparablesUI(comparablesData);
+                
+                // Hide loading indicator
+                document.getElementById('comparablesLoadingIndicator').classList.add('hidden');
+                
+                // Show comparables content
+                document.getElementById('comparablesContent').classList.remove('hidden');
+                
+                // Show success message
+                displayMessage(`Successfully loaded comparable companies data for ${ticker}.`, "success");
+                
+                return comparablesData;
+            } catch (error) {
+                // Hide loading indicator
+                document.getElementById('comparablesLoadingIndicator').classList.add('hidden');
+                
+                // Show error message
+                displayMessage(`Error: Failed to load comparable companies data. ${error.message}`, "error");
+                
+                throw error;
+            }
+        }
+
+        // Function to update the comparable companies UI
+        function updateComparablesUI(data) {
+            // Update basic information
+            document.getElementById('comparablesCompanyName').textContent = data.companyName + " (" + data.ticker + ")";
+            document.getElementById('comparablesIndustry').textContent = data.industry;
+            document.getElementById('comparablesSector').textContent = data.sector;
+            document.getElementById('comparablesDate').textContent = `Data as of: ${data.dataDate}`;
+            
+            // Update the comparables table
+            updateComparablesTable(data.companies);
+            
+            // Create valuation multiples chart
+            createValuationMultiplesChart(data.companies);
+            
+            // Create profitability metrics chart
+            createProfitabilityMetricsChart(data.companies);
+            
+            // Update company details cards
+            updateCompanyDetailsCards(data.companies);
+        }
+
+        // Function to update the comparables table
+        function updateComparablesTable(companies) {
+            const tableBody = document.getElementById('comparablesTableBody');
+            tableBody.innerHTML = '';
+            
+            companies.forEach(company => {
+                const row = document.createElement('tr');
+                row.className = company.isSubject ? 
+                    'bg-blue-50 dark:bg-blue-900/20 border-t border-gray-200 dark:border-gray-700' : 
+                    'border-t border-gray-200 dark:border-gray-700';
+                
+                // Company name and ticker cell
+                const nameCell = document.createElement('td');
+                nameCell.className = 'py-3 px-4 text-left text-gray-800 dark:text-gray-200 sticky left-0 ' + 
+                                (company.isSubject ? 'bg-blue-50 dark:bg-blue-900/20 font-medium' : 'bg-white dark:bg-gray-800');
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'font-medium';
+                nameDiv.textContent = company.name;
+                
+                const tickerDiv = document.createElement('div');
+                tickerDiv.className = 'text-xs text-gray-500 dark:text-gray-400';
+                tickerDiv.textContent = company.ticker;
+                
+                nameCell.appendChild(nameDiv);
+                nameCell.appendChild(tickerDiv);
+                row.appendChild(nameCell);
+                
+                // Market Cap cell
+                const mcapCell = document.createElement('td');
+                mcapCell.className = 'py-3 px-4 text-right text-gray-800 dark:text-gray-200';
+                mcapCell.textContent = company.marketCap;
+                row.appendChild(mcapCell);
+                
+                // Revenue cell
+                const revenueCell = document.createElement('td');
+                revenueCell.className = 'py-3 px-4 text-right text-gray-800 dark:text-gray-200';
+                revenueCell.textContent = company.revenue;
+                row.appendChild(revenueCell);
+                
+                // Revenue Growth cell
+                const revGrowthCell = document.createElement('td');
+                revGrowthCell.className = 'py-3 px-4 text-right';
+                const revGrowthVal = parseFloat(company.revenueGrowth);
+                revGrowthCell.textContent = company.revenueGrowth;
+                revGrowthCell.className += revGrowthVal >= 0 ? 
+                    ' text-green-600 dark:text-green-400' : 
+                    ' text-red-600 dark:text-red-400';
+                row.appendChild(revGrowthCell);
+                
+                // P/E Ratio cell
+                const peCell = createMetricCell(company.pe, 'pe');
+                row.appendChild(peCell);
+                
+                // P/S Ratio cell
+                const psCell = createMetricCell(company.ps, 'ps');
+                row.appendChild(psCell);
+                
+                // P/B Ratio cell
+                const pbCell = createMetricCell(company.pb, 'pb');
+                row.appendChild(pbCell);
+                
+                // EV/EBITDA cell
+                const evEbitdaCell = createMetricCell(company.evEbitda, 'evebitda');
+                row.appendChild(evEbitdaCell);
+                
+                // Gross Margin cell
+                const gmCell = createMetricCell(company.grossMargin, 'gpm', true);
+                row.appendChild(gmCell);
+                
+                // Operating Margin cell
+                const omCell = createMetricCell(company.operatingMargin, 'opm', true);
+                row.appendChild(omCell);
+                
+                // Net Margin cell
+                const nmCell = createMetricCell(company.netMargin, 'npm', true);
+                row.appendChild(nmCell);
+                
+                // ROE cell
+                const roeCell = createMetricCell(company.roe, 'roe', true);
+                row.appendChild(roeCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Helper function to create a metric cell
+        function createMetricCell(value, metricClass, isPercentage = false) {
+            const cell = document.createElement('td');
+            cell.className = `py-3 px-4 text-right text-gray-800 dark:text-gray-200 metric-col ${metricClass}`;
+            
+            if (isPercentage) {
+                cell.textContent = value;
+            } else {
+                cell.textContent = typeof value === 'number' ? value.toFixed(1) : value;
+            }
+            
+            return cell;
+        }
+
+        // Function to create valuation multiples chart
+        function createValuationMultiplesChart(companies) {
+            const ctx = document.getElementById('valuationMultiplesChart').getContext('2d');
+            
+            // Prepare data for the chart
+            const labels = companies.map(company => company.ticker);
+            
+            // Valuation metrics to display
+            const peData = companies.map(company => typeof company.pe === 'number' ? company.pe : parseFloat(company.pe));
+            const psData = companies.map(company => typeof company.ps === 'number' ? company.ps : parseFloat(company.ps));
+            const pbData = companies.map(company => typeof company.pb === 'number' ? company.pb : parseFloat(company.pb));
+            const evEbitdaData = companies.map(company => typeof company.evEbitda === 'number' ? company.evEbitda : parseFloat(company.evEbitda));
+            
+            // Background colors - use special color for subject company
+            const backgroundColors = companies.map(company => 
+                company.isSubject ? 'rgba(93, 92, 222, 0.8)' : 'rgba(75, 192, 192, 0.6)'
+            );
+            
+            // Create or update the chart
+            if (window.charts && window.charts.valuationMultiples) {
+                // Update existing chart
+                window.charts.valuationMultiples.data.labels = labels;
+                window.charts.valuationMultiples.data.datasets[0].data = peData;
+                window.charts.valuationMultiples.data.datasets[0].backgroundColor = backgroundColors;
+                window.charts.valuationMultiples.data.datasets[1].data = psData;
+                window.charts.valuationMultiples.data.datasets[1].backgroundColor = backgroundColors;
+                window.charts.valuationMultiples.data.datasets[2].data = pbData;
+                window.charts.valuationMultiples.data.datasets[2].backgroundColor = backgroundColors;
+                window.charts.valuationMultiples.data.datasets[3].data = evEbitdaData;
+                window.charts.valuationMultiples.data.datasets[3].backgroundColor = backgroundColors;
+                window.charts.valuationMultiples.update();
+            } else {
+                // Create new chart
+                if (!window.charts) window.charts = {};
+                
+                window.charts.valuationMultiples = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'P/E Ratio',
+                                data: peData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(93, 92, 222, 0.8)',
+                                hidden: false
+                            },
+                            {
+                                label: 'P/S Ratio',
+                                data: psData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(54, 162, 235, 0.8)',
+                                hidden: true
+                            },
+                            {
+                                label: 'P/B Ratio',
+                                data: pbData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(255, 159, 64, 0.8)',
+                                hidden: true
+                            },
+                            {
+                                label: 'EV/EBITDA',
+                                data: evEbitdaData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(75, 192, 192, 0.8)',
+                                hidden: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                onClick: function(e, legendItem, legend) {
+                                    const index = legendItem.datasetIndex;
+                                    const ci = legend.chart;
+                                    
+                                    // Hide all datasets first
+                                    ci.data.datasets.forEach((dataset, i) => {
+                                        dataset.hidden = true;
+                                    });
+                                    
+                                    // Then show only the clicked one
+                                    ci.data.datasets[index].hidden = false;
+                                    ci.update();
+                                },
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.raw.toFixed(1);
+                                        return `${label}: ${value}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                },
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 
+                                        'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 
+                                        'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Function to create profitability metrics chart
+        function createProfitabilityMetricsChart(companies) {
+            const ctx = document.getElementById('profitabilityMetricsChart').getContext('2d');
+            
+            // Prepare data for the chart
+            const labels = companies.map(company => company.ticker);
+            
+            // Convert percentage strings to numbers
+            function parsePercentage(value) {
+                if (typeof value === 'string') {
+                    return parseFloat(value.replace('%', ''));
+                }
+                return value;
+            }
+            
+            // Profitability metrics to display
+            const grossMarginData = companies.map(company => parsePercentage(company.grossMargin));
+            const operatingMarginData = companies.map(company => parsePercentage(company.operatingMargin));
+            const netMarginData = companies.map(company => parsePercentage(company.netMargin));
+            const roeData = companies.map(company => parsePercentage(company.roe));
+            
+            // Background colors - use special color for subject company
+            const backgroundColors = companies.map(company => 
+                company.isSubject ? 'rgba(93, 92, 222, 0.8)' : 'rgba(54, 162, 235, 0.6)'
+            );
+            
+            // Create or update the chart
+            if (window.charts && window.charts.profitabilityMetrics) {
+                // Update existing chart
+                window.charts.profitabilityMetrics.data.labels = labels;
+                window.charts.profitabilityMetrics.data.datasets[0].data = grossMarginData;
+                window.charts.profitabilityMetrics.data.datasets[0].backgroundColor = backgroundColors;
+                window.charts.profitabilityMetrics.data.datasets[1].data = operatingMarginData;
+                window.charts.profitabilityMetrics.data.datasets[1].backgroundColor = backgroundColors;
+                window.charts.profitabilityMetrics.data.datasets[2].data = netMarginData;
+                window.charts.profitabilityMetrics.data.datasets[2].backgroundColor = backgroundColors;
+                window.charts.profitabilityMetrics.data.datasets[3].data = roeData;
+                window.charts.profitabilityMetrics.data.datasets[3].backgroundColor = backgroundColors;
+                window.charts.profitabilityMetrics.update();
+            } else {
+                // Create new chart
+                if (!window.charts) window.charts = {};
+                
+                window.charts.profitabilityMetrics = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Gross Margin (%)',
+                                data: grossMarginData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(93, 92, 222, 0.8)',
+                                hidden: false
+                            },
+                            {
+                                label: 'Operating Margin (%)',
+                                data: operatingMarginData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(54, 162, 235, 0.8)',
+                                hidden: true
+                            },
+                            {
+                                label: 'Net Margin (%)',
+                                data: netMarginData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(255, 159, 64, 0.8)',
+                                hidden: true
+                            },
+                            {
+                                label: 'ROE (%)',
+                                data: roeData,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1,
+                                borderColor: 'rgba(75, 192, 192, 0.8)',
+                                hidden: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                onClick: function(e, legendItem, legend) {
+                                    const index = legendItem.datasetIndex;
+                                    const ci = legend.chart;
+                                    
+                                    // Hide all datasets first
+                                    ci.data.datasets.forEach((dataset, i) => {
+                                        dataset.hidden = true;
+                                    });
+                                    
+                                    // Then show only the clicked one
+                                    ci.data.datasets[index].hidden = false;
+                                    ci.update();
+                                },
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.raw.toFixed(1) + '%';
+                                        return `${label}: ${value}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Percentage (%)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                },
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 
+                                        'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 
+                                        'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Function to update company details cards
+        function updateCompanyDetailsCards(companies) {
+            const cardsContainer = document.getElementById('companyDetailsCards');
+            cardsContainer.innerHTML = '';
+            
+            companies.forEach(company => {
+                const card = document.createElement('div');
+                card.className = company.isSubject ? 
+                    'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4 shadow-sm' : 
+                    'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm';
+                
+                // Company header
+                const header = document.createElement('div');
+                header.className = 'mb-2 pb-2 border-b border-gray-200 dark:border-gray-700';
+                
+                const title = document.createElement('h5');
+                title.className = 'font-semibold text-gray-800 dark:text-white flex justify-between items-center';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = company.name;
+                
+                const tickerSpan = document.createElement('span');
+                tickerSpan.className = 'text-sm text-primary bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded';
+                tickerSpan.textContent = company.ticker;
+                
+                title.appendChild(nameSpan);
+                title.appendChild(tickerSpan);
+                header.appendChild(title);
+                
+                // Company description
+                const description = document.createElement('p');
+                description.className = 'text-sm text-gray-600 dark:text-gray-400 mt-2';
+                description.textContent = company.description;
+                
+                // Key metrics
+                const metricsDiv = document.createElement('div');
+                metricsDiv.className = 'mt-3 grid grid-cols-2 gap-2 text-sm';
+                
+                // Create metric items
+                const metricItems = [
+                    { label: 'Market Cap', value: company.marketCap },
+                    { label: 'Revenue', value: company.revenue },
+                    { label: 'Revenue Growth', value: company.revenueGrowth },
+                    { label: 'Operating Margin', value: company.operatingMargin },
+                    { label: 'P/E Ratio', value: typeof company.pe === 'number' ? company.pe.toFixed(1) : company.pe },
+                    { label: 'EV/EBITDA', value: typeof company.evEbitda === 'number' ? company.evEbitda.toFixed(1) : company.evEbitda }
+                ];
+                
+                metricItems.forEach(item => {
+                    const metricDiv = document.createElement('div');
+                    metricDiv.className = 'border-t border-gray-100 dark:border-gray-700 pt-1';
+                    
+                    const label = document.createElement('span');
+                    label.className = 'block text-xs text-gray-500 dark:text-gray-400';
+                    label.textContent = item.label;
+                    
+                    const value = document.createElement('span');
+                    value.className = 'font-medium text-gray-800 dark:text-gray-200';
+                    value.textContent = item.value;
+                    
+                    metricDiv.appendChild(label);
+                    metricDiv.appendChild(value);
+                    metricsDiv.appendChild(metricDiv);
+                });
+                
+                // Assemble the card
+                card.appendChild(header);
+                card.appendChild(description);
+                card.appendChild(metricsDiv);
+                
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // Function to toggle visibility of columns based on checkbox selections
+        function updateColumnVisibility() {
+            // Get all metric checkboxes
+            const checkboxes = document.querySelectorAll('.metric-checkbox');
+            
+            // Toggle column visibility based on checkbox state
+            checkboxes.forEach(checkbox => {
+                const metricClass = checkbox.value;
+                const columns = document.querySelectorAll(`.metric-col.${metricClass}`);
+                
+                columns.forEach(column => {
+                    if (checkbox.checked) {
+                        column.classList.remove('hidden');
+                    } else {
+                        column.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Event listeners for Comparable Companies page
+        document.getElementById('nav-comparables').addEventListener('click', () => showPage('page-comparables'));
+
+        document.getElementById('fetchComparablesBtn').addEventListener('click', function() {
+            const ticker = document.getElementById('comparablesTickerInput').value.trim();
+            if (!ticker) {
+                displayMessage("Please enter a stock ticker.", "error");
+                return;
+            }
+            fetchComparablesData(ticker);
+        });
+
+        document.getElementById('comparablesTickerInput').addEventListener('input', function() {
+            updateAllTickerInputs(this.value.trim());
+        });
+
+        document.querySelector('.comparables-quick-btn').addEventListener('click', function() {
+            document.getElementById('comparablesTickerInput').value = "AAPL";
+            fetchComparablesData("AAPL");
+        });
+
+        document.getElementById('updateComparablesTable').addEventListener('click', function() {
+            updateColumnVisibility();
+        });
+
+        // Initialize column visibility based on default checkbox states
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add this to the existing DOMContentLoaded listener
+            // Initialize metric column visibility
+            updateColumnVisibility();
+        });
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
