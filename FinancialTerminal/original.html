@@ -1544,6 +1544,48 @@
             currentTicker: '' // Store the current ticker across all pages
         };
 
+        // Cache management system
+        const cacheManager = {
+            // Cache expiration time in milliseconds (30 minutes)
+            CACHE_EXPIRATION: 30 * 60 * 1000,
+            
+            // Cache storage with timestamps
+            cache: {},
+            
+            // Store data in cache with timestamp
+            set: function(key, data) {
+                this.cache[key] = {
+                    timestamp: Date.now(),
+                    data: data
+                };
+            },
+            
+            // Get data from cache if it exists and is not expired
+            get: function(key) {
+                const cachedItem = this.cache[key];
+                if (!cachedItem) return null;
+                
+                // Check if cache is expired
+                if (Date.now() - cachedItem.timestamp > this.CACHE_EXPIRATION) {
+                    // Cache expired, remove it
+                    delete this.cache[key];
+                    return null;
+                }
+                
+                return cachedItem.data;
+            },
+            
+            // Check if data exists in cache and is not expired
+            has: function(key) {
+                return this.get(key) !== null;
+            },
+            
+            // Clear all cached data
+            clear: function() {
+                this.cache = {};
+            }
+        };
+
         // Sample data for Apple to enable demo functionality
         const sampleData = {
             "name": "Apple Inc.",
@@ -3443,6 +3485,59 @@
             document.getElementById('stockDataTimestamp').textContent = `Data as of: ${data.timestamp}`;
         }
 
+        // Add a visual cache indicator
+        function addCacheIndicator(section, ticker) {
+            const indicator = document.createElement('div');
+            indicator.className = 'text-xs py-1 px-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 rounded-md inline-flex items-center';
+            indicator.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Cached data</span>
+            `;
+            
+            // Find the appropriate container based on section
+            let container;
+            switch(section) {
+                case 'overview':
+                    container = document.getElementById('comparablesDate');
+                    break;
+                case 'financials':
+                    container = document.getElementById('dataSourcesNote');
+                    break;
+                case 'valuation':
+                    container = document.getElementById('valuationCurrencyUnit');
+                    break;
+                case 'analyst':
+                    container = document.getElementById('consensusDate');
+                    break;
+                case 'stock':
+                    container = document.getElementById('stockDataTimestamp');
+                    break;
+                case 'industry':
+                    container = document.getElementById('industryDataDate');
+                    break;
+                case 'comparables':
+                    container = document.getElementById('comparablesDate');
+                    break;
+                default:
+                    return;
+            }
+            
+            // Add indicator to the container if found
+            if (container) {
+                // Remove any existing cache indicator
+                const existingIndicator = container.querySelector('.cache-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                // Add the new indicator
+                indicator.classList.add('cache-indicator', 'ml-2');
+                container.appendChild(indicator);
+            }
+        }
+
         // Initialize financial charts functionality
         function initializeCharts() {
             // Create chart instances and store them
@@ -4049,7 +4144,31 @@ Include 5-8 comparable companies that would be typically used in a peer comparis
         async function fetchCompanyOverview(ticker) {
             // Update all ticker inputs across pages
             updateAllTickerInputs(ticker);
+
+            // Check cache first
+            const cacheKey = `overview_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
+
+            if (cachedData) {
+                console.log(`Loading company overview for ${ticker} from cache`);
+                displayMessage(`Loading cached company overview data for ${ticker}`, "info");
+                
+                // Store in the data store
+                dataStore.overview = cachedData;
+                
+                // Update UI
+                updateCompanyDescription(cachedData);
+                
+                // Show success message
+                displayMessage("Successfully loaded company overview from cache", "success");
+                
+                // Add cache indicator
+                addCacheIndicator('overview', ticker);
+                
+                return cachedData;
+            }
             
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('overviewLoadingIndicator').classList.remove('hidden');
             document.getElementById('companyDescription').classList.add('hidden');
@@ -4084,6 +4203,9 @@ Include 5-8 comparable companies that would be typically used in a peer comparis
                 // Show success message
                 displayMessage("Successfully loaded company overview for Apple Inc.", "success");
                 
+                // Store in cache
+                cacheManager.set(cacheKey, companyData);
+
                 return companyData;
             }
             
@@ -4233,6 +4355,9 @@ Only return a valid JSON object in the above format without any commentary or ad
                 
                 // Show success message
                 displayMessage(`Successfully loaded company overview for ${ticker}.`, "success");
+                
+                // Store in cache when data is received successfully
+                cacheManager.set(cacheKey, companyData);
                 
                 return companyData;
             } catch (error) {
@@ -7301,7 +7426,7 @@ Provide accurate, up-to-date information about the company's industry, its marke
         document.getElementById('updateComparablesTable').addEventListener('click', function() {
             updateColumnVisibility();
         });
-
+        
         // Initialize column visibility based on default checkbox states
         document.addEventListener('DOMContentLoaded', function() {
             // Add this to the existing DOMContentLoaded listener
@@ -7309,10 +7434,34 @@ Provide accurate, up-to-date information about the company's industry, its marke
             updateColumnVisibility();
         });
 
+        // Add cache controls to the UI
+        function addCacheControls() {
+            // Create a "Clear Cache" button in the header
+            const header = document.querySelector('header');
+            
+            const cacheControlDiv = document.createElement('div');
+            cacheControlDiv.className = 'flex justify-end items-center mb-2';
+            
+            const cacheClearBtn = document.createElement('button');
+            cacheClearBtn.className = 'text-xs bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300';
+            cacheClearBtn.textContent = 'Clear Data Cache';
+            cacheClearBtn.title = 'Clear all cached financial data';
+            cacheClearBtn.onclick = function() {
+                cacheManager.clear();
+                displayMessage("Data cache cleared. New data will be fetched on next request.", "info");
+            };
+            
+            cacheControlDiv.appendChild(cacheClearBtn);
+            header.appendChild(cacheControlDiv);
+        }
+
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize charts
             initializeCharts();
+     
+            // Add cache controls
+            addCacheControls();
             
             // Show welcome message
             displayMessage("**Welcome to the Financial Analysis Suite**\n\nThis multi-page application allows you to analyze different aspects of a company:\n\n• **Company Overview** - Basic company information and revenue breakdown\n• **Financial Statements** - Income statement, balance sheet, and cash flow\n• **Valuation Model** - DCF valuation with adjustable parameters\n• **Analyst Consensus** - Ratings, price targets, and recommendations\n• **Stock Information** - Current price and performance metrics\n\nChoose a page from the navigation bar above and enter a stock ticker to begin, or use the 'AAPL Demo Mode' button on any page for a quick demonstration.", "info");
