@@ -964,16 +964,16 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Metrics to Display:</label>
                                     <div class="flex flex-wrap gap-2">
                                         <label class="inline-flex items-center">
-                                            <input type="checkbox" class="cashflow-chart-metric" value="Net Cash from Operations" checked class="form-checkbox h-4 w-4 text-primary">
-                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Net Cash from Operations</span>
+                                            <input type="checkbox" class="cashflow-chart-metric" value="Cash Flow from Operating Activities" checked class="form-checkbox h-4 w-4 text-primary">
+                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Cash Flow from Operating Activities</span>
                                         </label>
                                         <label class="inline-flex items-center">
-                                            <input type="checkbox" class="cashflow-chart-metric" value="Net Cash from Investing" checked class="form-checkbox h-4 w-4 text-primary">
-                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Net Cash from Investing</span>
+                                            <input type="checkbox" class="cashflow-chart-metric" value="Cash Flow from Investing Activities" checked class="form-checkbox h-4 w-4 text-primary">
+                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Cash Flow from Investing Activities</span>
                                         </label>
                                         <label class="inline-flex items-center">
-                                            <input type="checkbox" class="cashflow-chart-metric" value="Net Cash from Financing" checked class="form-checkbox h-4 w-4 text-primary">
-                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Net Cash from Financing</span>
+                                            <input type="checkbox" class="cashflow-chart-metric" value="Cash Flow from Financing Activities" checked class="form-checkbox h-4 w-4 text-primary">
+                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Cash Flow from Financing Activities</span>
                                         </label>
                                         <label class="inline-flex items-center">
                                             <input type="checkbox" class="cashflow-chart-metric" value="Net Change in Cash" checked class="form-checkbox h-4 w-4 text-primary">
@@ -1659,13 +1659,13 @@
                 "Net Income": ["$96,995", "$99,803", "$94,680", "$57,411"],
                 "Depreciation & Amortization": ["$11,862", "$11,104", "$11,284", "$11,056"],
                 "Changes in Working Capital": ["($13,573)", "$19,690", "$10,066", "$4,232"],
-                "Net Cash from Operations": ["$113,812", "$122,151", "$104,038", "$80,674"],
+                "Cash Flow from Operating Activities": ["$113,812", "$122,151", "$104,038", "$80,674"],
                 "Capital Expenditures": ["($10,655)", "($10,708)", "($11,085)", "($7,309)"],
                 "Acquisitions": ["($306)", "($306)", "($33)", "($1,524)"],
-                "Net Cash from Investing": ["($11,900)", "($22,354)", "($14,545)", "($4,289)"],
+                "Cash Flow from Investing Activities": ["($11,900)", "($22,354)", "($14,545)", "($4,289)"],
                 "Debt Issuance (Repayment)": ["($4,915)", "($9,543)", "$12,665", "$16,091"],
                 "Dividends Paid": ["($14,758)", "($14,841)", "($14,467)", "($14,081)"],
-                "Net Cash from Financing": ["($88,416)", "($110,749)", "($93,353)", "($86,820)"],
+                "Cash Flow from Financing Activities": ["($88,416)", "($110,749)", "($93,353)", "($86,820)"],
                 "Net Change in Cash": ["$13,496", "($10,952)", "($3,860)", "($10,435)"],
                 "Beginning Cash Balance": ["$16,469", "$27,421", "$31,281", "$41,716"],
                 "Ending Cash Balance": ["$29,965", "$16,469", "$27,421", "$31,281"]
@@ -1803,15 +1803,15 @@
             { label: 'Net Income', isSection: false, isTotal: false, cssClass: 'pl-6' },
             { label: 'Depreciation & Amortization', isSection: false, isTotal: false, cssClass: 'pl-6' },
             { label: 'Changes in Working Capital', isSection: false, isTotal: false, cssClass: 'pl-6' },
-            { label: 'Net Cash from Operations', isSection: false, isTotal: true, cssClass: 'bg-gray-50 dark:bg-gray-750' },
+            { label: 'Cash Flow from Operating Activities', isSection: false, isTotal: true, cssClass: 'bg-gray-50 dark:bg-gray-750' },
             { label: 'Investing Activities', isSection: true, isTotal: false, cssClass: 'bg-gray-50 dark:bg-gray-750', colspan: true },
             { label: 'Capital Expenditures', isSection: false, isTotal: false, cssClass: 'pl-6', isNegative: true },
             { label: 'Acquisitions', isSection: false, isTotal: false, cssClass: 'pl-6', isNegative: true },
-            { label: 'Net Cash from Investing', isSection: false, isTotal: true, cssClass: 'bg-gray-50 dark:bg-gray-750', isNegative: true },
+            { label: 'Cash Flow from Investing Activities', isSection: false, isTotal: true, cssClass: 'bg-gray-50 dark:bg-gray-750', isNegative: true },
             { label: 'Financing Activities', isSection: true, isTotal: false, cssClass: 'bg-gray-50 dark:bg-gray-750', colspan: true },
             { label: 'Debt Issuance (Repayment)', isSection: false, isTotal: false, cssClass: 'pl-6' },
             { label: 'Dividends Paid', isSection: false, isTotal: false, cssClass: 'pl-6', isNegative: true },
-            { label: 'Net Cash from Financing', isSection: false, isTotal: true, cssClass: 'bg-gray-50 dark:bg-gray-750' },
+            { label: 'Cash Flow from Financing Activities', isSection: false, isTotal: true, cssClass: 'bg-gray-50 dark:bg-gray-750' },
             { label: 'Net Change in Cash', isSection: false, isTotal: true, cssClass: 'bg-gray-100 dark:bg-gray-700 font-bold' },
             { label: 'Beginning Cash Balance', isSection: false, isTotal: false, cssClass: '' },
             { label: 'Ending Cash Balance', isSection: false, isTotal: true, cssClass: 'bg-gray-100 dark:bg-gray-700 font-bold' }
@@ -3124,7 +3124,7 @@
                     isSection: true,
                     rows: [
                         { label: 'Free Cash Flow', key: 'fcf', isTotal: true, highlight: true },
-                        { label: 'Discount Factor', key: 'discountFactor', isTotal: false },
+                        { label: 'Discount Factor', key: 'discountFactor', isTotal: false, isMultiplier: true },
                         { label: 'Present Value of FCF', key: 'presentValueFCF', isTotal: true },
                         { label: 'Cumulative PV', key: 'cumulativePV', isTotal: true, skipHistorical: true }
                     ]
@@ -3212,7 +3212,13 @@
                                 cell.textContent = '-';
                             } else {
                                 // Format financial values
-                                cell.textContent = formatFinancialNumber(projection[row.key], row.isNegative, currencySymbol);
+                                if (row.isMultiplier) {
+                                    // Format as decimal with 2 decimal places for discount factors
+                                    cell.textContent = projection[row.key].toFixed(2);
+                        } else {
+                            // Format as financial number for all other values
+                            cell.textContent = formatFinancialNumber(projection[row.key], row.isNegative, currencySymbol);
+                        }
                             }
                         } else {
                             cell.textContent = '-';
@@ -4492,7 +4498,7 @@ Only return a valid JSON object in the above format without any commentary or ad
                 // Construct prompt for AI to get financial statements
                 const botName = modelType === 'pro' ? '@Gemini-2.5-Pro-Exp' : '@Gemini-2.5-Flash-Preview';
                 const prompt = `${botName} 
-I need comprehensive financial data for ${ticker} in a specific JSON format. Please provide ONLY the JSON object with no additional text:
+I need comprehensive financial data for the company with the stock ticker ${ticker} in a specific JSON format. Preferred data source is Yahoo Finance. Please provide ONLY the JSON object with no additional text:
 
 \`\`\`json
 {
@@ -4534,13 +4540,13 @@ I need comprehensive financial data for ${ticker} in a specific JSON format. Ple
     "Net Income": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
     "Depreciation & Amortization": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
     "Changes in Working Capital": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
-    "Net Cash from Operations": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
+    "Cash Flow from Operating Activities": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
     "Capital Expenditures": ["($X,XXX)", "($X,XXX)", "($X,XXX)", "($X,XXX)"],
     "Acquisitions": ["($X,XXX)", "($X,XXX)", "($X,XXX)", "($X,XXX)"],
-    "Net Cash from Investing": ["($X,XXX)", "($X,XXX)", "($X,XXX)", "($X,XXX)"],
+    "Cash Flow from Investing Activities": ["($X,XXX)", "($X,XXX)", "($X,XXX)", "($X,XXX)"],
     "Debt Issuance (Repayment)": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
     "Dividends Paid": ["($X,XXX)", "($X,XXX)", "($X,XXX)", "($X,XXX)"],
-    "Net Cash from Financing": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
+    "Cash Flow from Financing Activities": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"],
     "Net Change in Cash": ["$X,XXX", "$X,XXX", "$X,XXX", "$X,XXX"]
   },
   "sharesOutstanding": X.XX
@@ -4712,13 +4718,13 @@ Please ensure all financial figures are formatted with $ and commas, with negati
                         "Net Income": ["$4,125", "$3,675", "$3,225", "$2,775"],
                         "Depreciation & Amortization": ["$2,000", "$1,800", "$1,600", "$1,400"],
                         "Changes in Working Capital": ["($500)", "($400)", "($300)", "($200)"],
-                        "Net Cash from Operations": ["$5,625", "$5,075", "$4,525", "$3,975"],
+                        "Cash Flow from Operating Activities": ["$5,625", "$5,075", "$4,525", "$3,975"],
                         "Capital Expenditures": ["($2,500)", "($2,250)", "($2,000)", "($1,750)"],
                         "Acquisitions": ["($1,000)", "($900)", "($800)", "($700)"],
-                        "Net Cash from Investing": ["($3,500)", "($3,150)", "($2,800)", "($2,450)"],
+                        "Cash Flow from Investing Activities": ["($3,500)", "($3,150)", "($2,800)", "($2,450)"],
                         "Debt Issuance (Repayment)": ["$1,000", "$900", "$800", "$700"],
                         "Dividends Paid": ["($1,000)", "($900)", "($800)", "($700)"],
-                        "Net Cash from Financing": ["$0", "$0", "$0", "$0"],
+                        "Cash Flow from Financing Activities": ["$0", "$0", "$0", "$0"],
                         "Net Change in Cash": ["$2,125", "$1,925", "$1,725", "$1,525"],
                         "Beginning Cash Balance": ["$7,875", "$7,075", "$6,275", "$5,475"],
                         "Ending Cash Balance": ["$10,000", "$9,000", "$8,000", "$7,000"]

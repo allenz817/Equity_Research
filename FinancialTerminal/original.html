@@ -96,8 +96,8 @@
                         </div>
                         <div class="flex items-center">
                             <select id="aiModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
                         <button id="fetchOverviewBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
@@ -254,8 +254,8 @@
                         </div>
                         <div class="flex items-center">
                             <select id="stockModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
                         <button id="fetchStockDataBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
@@ -422,8 +422,8 @@
                         </div>
                         <div class="flex items-center">
                             <select id="industryModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
                         <button id="fetchIndustryBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
@@ -746,8 +746,8 @@
                         </div>
                         <div class="flex items-center">
                             <select id="financialsModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
                         <button id="fetchFinancialsBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
@@ -1129,8 +1129,8 @@
                         </div>
                         <div class="flex items-center">
                             <select id="valuationModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
                         <button id="fetchValuationBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
@@ -1388,8 +1388,8 @@
                         </div>
                         <div class="flex items-center">
                             <select id="analystModelSelect" class="px-3 py-2 mr-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                                 <option value="pro">Gemini-2.5-Pro-Exp</option>
+                                <option value="flash">Gemini-2.5-Flash-Preview</option>
                             </select>
                         </div>
                         <button id="fetchAnalystBtn" class="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
@@ -3124,7 +3124,7 @@
                     isSection: true,
                     rows: [
                         { label: 'Free Cash Flow', key: 'fcf', isTotal: true, highlight: true },
-                        { label: 'Discount Factor', key: 'discountFactor', isTotal: false },
+                        { label: 'Discount Factor', key: 'discountFactor', isTotal: false, isMultiplier: true },
                         { label: 'Present Value of FCF', key: 'presentValueFCF', isTotal: true },
                         { label: 'Cumulative PV', key: 'cumulativePV', isTotal: true, skipHistorical: true }
                     ]
@@ -3212,7 +3212,13 @@
                                 cell.textContent = '-';
                             } else {
                                 // Format financial values
-                                cell.textContent = formatFinancialNumber(projection[row.key], row.isNegative, currencySymbol);
+                                if (row.isMultiplier) {
+                                    // Format as decimal with 2 decimal places for discount factors
+                                    cell.textContent = projection[row.key].toFixed(2);
+                        } else {
+                            // Format as financial number for all other values
+                            cell.textContent = formatFinancialNumber(projection[row.key], row.isNegative, currencySymbol);
+                        }
                             }
                         } else {
                             cell.textContent = '-';
@@ -4122,7 +4128,7 @@ Include 5-8 comparable companies that would be typically used in a peer comparis
         // Function to get the selected AI model for each section
         function getSelectedModel(section) {
             const selector = document.getElementById(`${section}ModelSelect`);
-            return selector ? selector.value : 'claude';
+            return selector ? selector.value : 'pro';
         }
 
         // Function to update all ticker inputs across pages
@@ -4213,7 +4219,7 @@ Include 5-8 comparable companies that would be typically used in a peer comparis
             try {
                 // Get the selected model from the dropdown
                 const modelSelect = document.getElementById('aiModelSelect');
-                const modelType = modelSelect ? modelSelect.value : 'flash';
+                const modelType = modelSelect ? modelSelect.value : 'pro';
                 const modelName = modelType === 'pro' ? 'Gemini-2.5-Pro-Exp' : 'Gemini-2.5-Flash-Preview';
                 
                 displayMessage(`Fetching company overview for ${ticker}... This may take up to one minute.`, "info");
@@ -4358,7 +4364,7 @@ Only return a valid JSON object in the above format without any commentary or ad
                 
                 // Store in cache when data is received successfully
                 cacheManager.set(cacheKey, companyData);
-                
+
                 return companyData;
             } catch (error) {
                 // Hide loading indicator
@@ -4373,6 +4379,34 @@ Only return a valid JSON object in the above format without any commentary or ad
         
         // Function to fetch financial statements data
         async function fetchFinancialData(ticker) {
+            // Check cache first
+            const cacheKey = `financials_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
+            
+            if (cachedData) {
+                console.log(`Loading financial data for ${ticker} from cache`);
+                displayMessage(`Loading cached financial data for ${ticker}`, "info");
+
+                // Store in the data store
+                dataStore.financials = cachedData;
+
+                // Update UI
+                updateTableHeaders(cachedData);
+                populateFinancialTables(cachedData);
+
+                // Show financial content
+                document.getElementById('financialContent').classList.remove('hidden');
+                
+                // Show success message
+                displayMessage("Successfully loaded financial data from cache", "success");
+
+                // Add cache indicator
+                addCacheIndicator('financials', ticker);
+
+                return cachedData;
+            }
+            
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('financialsLoadingIndicator').classList.remove('hidden');
             document.getElementById('financialContent').classList.add('hidden');
@@ -4396,15 +4430,18 @@ Only return a valid JSON object in the above format without any commentary or ad
                 
                 // Show success message
                 displayMessage("Successfully loaded financial data for Apple Inc.", "success");
-                
+                         
+                // Store in cache
+                cacheManager.set(cacheKey, sampleData);
+
                 return sampleData;
             }
             
             // For other tickers, get real data from AI model
             try {
                 const modelType = getSelectedModel('financials');
-                const modelName = modelType === 'gemini' ? 'Gemini-2.5-Pro' : 'Gemini-2.5-Flash';
-                
+                const modelName = modelType === 'pro' ? 'Gemini-2.5-Pro-Exp' : 'Gemini-2.5-Flash-Preview';
+
                 displayMessage(`Fetching financial data for ${ticker}... This may take up to one minute.`, "info");
                 
                 // Register handler for financial data
@@ -4543,6 +4580,9 @@ Please ensure all financial figures are formatted with $ and commas, with negati
                 // Show success message
                 displayMessage(`Successfully loaded financial data for ${ticker}.`, "success");
                 
+                // Store in cache when data is received successfully
+                cacheManager.set(cacheKey, financialData);
+
                 return financialData;
             } catch (error) {
                 // Hide loading indicator
@@ -4557,6 +4597,30 @@ Please ensure all financial figures are formatted with $ and commas, with negati
         
         // Function to fetch valuation data
         async function fetchValuationData(ticker) {
+            // Check cache first
+            const cacheKey = `valuation_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
+
+            if (cachedData) {
+                console.log(`Loading company valuation for ${ticker} from cache`);
+                displayMessage(`Loading cached company valuation data for ${ticker}`, "info");
+
+                // Store in the data store
+                dataStore.valuation = cachedData;
+
+                // Update UI
+                updateValuationAnalysis(cachedData);
+                
+                // Show success message
+                displayMessage("Successfully loaded valuation data from cache", "success");
+                
+                // Add cache indicator
+                addCacheIndicator('valuation', ticker);
+
+                return cachedData;
+            }
+
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('valuationLoadingIndicator').classList.remove('hidden');
             document.getElementById('valuationContent').classList.add('hidden');
@@ -4598,15 +4662,18 @@ Please ensure all financial figures are formatted with $ and commas, with negati
                 setTimeout(() => {
                     calculateValuation();
                 }, 100);
-                
+
+                // Store in cache
+                cacheManager.set(cacheKey, valuationData);
+
                 return valuationData;
             }
             
             // For other tickers, get real data from API
             try {
                 const modelType = getSelectedModel('valuation');
-                const modelName = modelType === 'claude' ? 'Claude-3.7-Sonnet' : 'Gemini-2.5-Flash';
-                
+                const modelName = modelType === 'pro' ? 'Gemini-2.5-Pro-Exp' : 'Gemini-2.5-Flash-Preview';
+
                 displayMessage(`Fetching valuation data for ${ticker}... This may take up to one minute.`, "info");
                 
                 // For this demo, we'll use the same mock financial data we used for the financial statements page
@@ -4687,6 +4754,9 @@ Please ensure all financial figures are formatted with $ and commas, with negati
                 displayMessage(`Successfully loaded valuation data for ${ticker}.`, "success");
                 displayMessage("Note: This is mock data. In a real application, this would fetch actual financial data via the Poe API.", "info");
                 
+                // Store in cache when data is received successfully
+                cacheManager.set(cacheKey, mockFinancialData);
+
                 return mockFinancialData;
             } catch (error) {
                 // Hide loading indicator
@@ -4701,6 +4771,29 @@ Please ensure all financial figures are formatted with $ and commas, with negati
         
         // Function to fetch analyst consensus data
         async function fetchAnalystConsensus(ticker) {
+            // Check cache first
+            const cacheKey = `analyst_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
+
+            if (cachedData) {
+                console.log(`Loading analyst consensus for ${ticker} from cache`);
+                displayMessage(`Loading cached analyst consensus data for ${ticker}`, "info");
+
+                // Store in the data store
+                dataStore.analyst = cachedData;
+
+                // Update UI
+                updateAnalystConsensus(cachedData);
+
+                // Show success message
+                displayMessage("Successfully loaded analyst consensus from cache", "success");
+
+                // Add cache indicator
+                addCacheIndicator('analyst', ticker);
+
+                return cachedData;
+            }
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('analystLoadingIndicator').classList.remove('hidden');
             document.getElementById('analystContent').classList.add('hidden');
@@ -4724,6 +4817,9 @@ Please ensure all financial figures are formatted with $ and commas, with negati
                 
                 // Show success message
                 displayMessage("Successfully loaded analyst consensus data for Apple Inc.", "success");
+
+                // Store in cache
+                cacheManager.set(cacheKey, sampleAnalystConsensus);
                 
                 return sampleAnalystConsensus;
             }
@@ -4731,8 +4827,8 @@ Please ensure all financial figures are formatted with $ and commas, with negati
             // For other tickers, get real data from AI model
             try {
                 const modelType = getSelectedModel('analyst');
-                const modelName = modelType === 'claude' ? 'Claude-3.7-Sonnet' : 'Gemini-2.5-Flash';
-                
+                const modelName = modelType === 'pro' ? 'Gemini-2.5-Pro-Exp' : 'Gemini-2.5-Flash-Preview';
+
                 displayMessage(`Fetching analyst consensus data for ${ticker}... This may take up to one minute.`, "info");
                 
                 // Register handler for analyst consensus data
@@ -4854,6 +4950,9 @@ Use the most recent analyst data available. Include at least 4-5 recent analyst 
                 // Show success message
                 displayMessage(`Successfully loaded analyst consensus data for ${ticker}.`, "success");
                 
+                // Store in cache when data is received successfully
+                cacheManager.set(cacheKey, analystData);
+
                 return analystData;
             } catch (error) {
                 // Hide loading indicator
@@ -4871,6 +4970,29 @@ Use the most recent analyst data available. Include at least 4-5 recent analyst 
         
         // Function to fetch stock information data
         async function fetchStockInfo(ticker) {
+            // Check cache first
+            const cacheKey = `stock_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
+
+            if (cachedData) {
+                console.log(`Loading stock information for ${ticker} from cache`);
+                displayMessage(`Loading cached stock information for ${ticker}`, "info");
+
+                // Store in the data store
+                dataStore.stock = cachedData;
+
+                // Update UI
+                updateStockInfo(cachedData);
+                
+                // Show success message
+                displayMessage("Successfully loaded stock information from cache", "success");
+                
+                // Add cache indicator
+                addCacheIndicator('stock', ticker);
+
+                return cachedData;
+            }
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('stockLoadingIndicator').classList.remove('hidden');
             document.getElementById('stockContent').classList.add('hidden');
@@ -4893,6 +5015,9 @@ Use the most recent analyst data available. Include at least 4-5 recent analyst 
                 
                 // Show success message
                 displayMessage("Successfully loaded stock information for Apple Inc.", "success");
+
+                // Store in cache
+                cacheManager.set(cacheKey, sampleStockData);
                 
                 return sampleStockData;
             }
@@ -5019,6 +5144,9 @@ Provide the most current stock price and financial metrics available. For return
                 
                 // Show success message
                 displayMessage(`Successfully loaded stock information for ${ticker}.`, "success");
+
+                // Store in cache when data is received successfully
+                cacheManager.set(cacheKey, stockData);
                 
                 return stockData;
             } catch (error) {
@@ -5929,7 +6057,31 @@ Provide the most current stock price and financial metrics available. For return
         async function fetchIndustryData(ticker) {
             // Update all ticker inputs across pages
             updateAllTickerInputs(ticker);
-            
+
+            // Check cache first
+            const cacheKey = `industry_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
+
+            if (cachedData) {
+                console.log(`Loading industry data for ${ticker} from cache`);
+                displayMessage(`Loading cached industry data for ${ticker}`, "info");
+
+                // Store in the data store
+                dataStore.industry = cachedData;
+
+                // Update UI
+                updateIndustryAnalysis(cachedData);
+                
+                // Show success message
+                displayMessage("Successfully loaded industry data from cache", "success");
+
+                // Add cache indicator
+                addCacheIndicator('industry', ticker);
+
+                return cachedData;
+            }
+
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('industryLoadingIndicator').classList.remove('hidden');
             document.getElementById('industryContent').classList.add('hidden');
@@ -6032,7 +6184,10 @@ Provide the most current stock price and financial metrics available. For return
                 
                 // Show success message
                 displayMessage("Successfully loaded industry analysis for Apple Inc.", "success");
-                
+
+                // Store in cache
+                cacheManager.set(cacheKey, industryData);
+
                 return industryData;
             }
             
@@ -6273,6 +6428,9 @@ Provide accurate, up-to-date information about the company's industry, its marke
                 // Show success message
                 displayMessage(`Successfully loaded industry analysis for ${ticker}.`, "success");
                 
+                // Store in cache
+                cacheManager.set(cacheKey, industryData);
+
                 return industryData;
             } catch (error) {
                 // Hide loading indicator
@@ -6611,7 +6769,31 @@ Provide accurate, up-to-date information about the company's industry, its marke
         async function fetchComparablesData(ticker) {
             // Update all ticker inputs across pages
             updateAllTickerInputs(ticker);
+
+            // Check cache first
+            const cacheKey = `comparables_${ticker.toUpperCase()}`;
+            const cachedData = cacheManager.get(cacheKey);
             
+            if (cachedData) {
+                console.log(`Loading comparables data for ${ticker} from cache`);
+                displayMessage(`Loading cached comparables data for ${ticker}`, "info");
+
+                // Store in the data store
+                dataStore.comparables = cachedData;
+                
+                // Update UI
+                updateComparablesUI(cachedData);
+
+                // Show success message
+                displayMessage("Successfully loaded comparables data from cache", "success");
+
+                // Add cache indicator
+                addCacheIndicator('comparables', ticker);
+                
+                return cachedData;
+            }
+            
+            // If not in cache, proceed with data fetching
             // Show loading indicator
             document.getElementById('comparablesLoadingIndicator').classList.remove('hidden');
             document.getElementById('comparablesContent').classList.add('hidden');
@@ -6764,10 +6946,13 @@ Provide accurate, up-to-date information about the company's industry, its marke
                 
                 // Show success message
                 displayMessage("Successfully loaded comparable companies data for Apple Inc.", "success");
+
+                // Store in cache
+                cacheManager.set(cacheKey, comparablesData);
                 
                 return comparablesData;
             }
-            
+
             // For other tickers, get real data from AI model
             try {
                 const modelType = getSelectedModel('comparables');
@@ -6896,6 +7081,9 @@ Provide accurate, up-to-date information about the company's industry, its marke
                 // Show success message
                 displayMessage(`Successfully loaded comparable companies data for ${ticker}.`, "success");
                 
+                // Store in cache when data is received successfully
+                cacheManager.set(cacheKey, comparablesData);
+
                 return comparablesData;
             } catch (error) {
                 // Hide loading indicator
