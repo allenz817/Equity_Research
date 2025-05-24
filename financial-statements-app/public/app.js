@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Dashboard from './components/Dashboard';
-import Layout from './components/Layout';
-import { fetchFinancialStatements } from './api/gemini.js';
+import Dashboard from '../src/components/Dashboard.js';
+import Layout from '../src/components/Layout.js';
+import { fetchFinancialStatements } from '../src/api/gemini.js';
 
 const App = () => {
     return (
