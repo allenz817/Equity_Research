@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Statements App</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Financial Statements Retriever</h1>
+        
+        <div class="max-w-md mx-auto mb-8">
+            <div class="flex gap-2">
+                <input 
+                    type="text" 
+                    id="companySymbol" 
+                    placeholder="Enter company symbol (e.g., AAPL)" 
+                    class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <button 
+                    id="fetchBtn" 
+                    class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Fetch
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="hidden text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <p class="mt-2">Fetching financial statements...</p>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Income Statement</h2>
+                    <div id="incomeStatement"></div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Balance Sheet</h2>
+                    <div id="balanceSheet"></div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Cash Flow</h2>
+                    <div id="cashFlowStatement"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error" class="hidden mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg"></div>
+    </div>
+
+    <script type="module" src="../src/app.js"></script>
+</body>
+</html>
