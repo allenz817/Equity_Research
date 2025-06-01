@@ -5,6 +5,7 @@ const express = require('express');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // Create Express app
 const app = express();
@@ -323,7 +324,28 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log("=== Gemini Stock Market Cap Lookup ===");
-    console.log("Server running at http://localhost:" + PORT);
+    console.log("Server running on port " + PORT);
+    console.log("Local access: http://localhost:" + PORT);
+    
+    // Get the machine's IP address
+    let ipAddress = "YOUR_IP_ADDRESS";
+    try {
+        const interfaces = os.networkInterfaces();
+        // Find the first non-internal IPv4 address
+        for (const name of Object.keys(interfaces)) {
+            for (const iface of interfaces[name]) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    ipAddress = iface.address;
+                    break;
+                }
+            }
+            if (ipAddress !== "YOUR_IP_ADDRESS") break;
+        }
+    } catch (err) {
+        console.log("Could not determine IP address:", err.message);
+    }
+    
+    console.log("Network access: http://" + ipAddress + ":" + PORT);
 });
