@@ -1,6 +1,6 @@
-# Gemini Stock Market Cap Lookup
+# Financial Statement Extractor
 
-This project is a web application that uses Google's Gemini AI model in Vertex AI to search for a stock ticker's most recent market capitalization.
+This application uses Google's Gemini AI to extract financial statement data from uploaded documents (PDFs, images) and generates formatted Excel reports containing Income Statement, Balance Sheet, and Cash Flow data.
 
 ## Table of Contents
 
@@ -8,44 +8,116 @@ This project is a web application that uses Google's Gemini AI model in Vertex A
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [API Endpoints](#api-endpoints)
 - [Deployment](#deployment)
 - [License](#license)
 
 ## Features
 
-- Simple web interface for entering stock ticker symbols
-- Uses Google's Gemini AI to retrieve current market cap data
-- Implements caching to reduce API calls and costs
-- Can be deployed on Google Cloud Run for reliable hosting
+- 📄 **Multi-format Support**: Upload PDFs, PNG, JPG, JPEG files
+- 🤖 **AI-Powered Extraction**: Uses Google Gemini AI to extract financial data
+- 📊 **Excel Generation**: Automatically creates formatted Excel reports
+- 💻 **Modern Web Interface**: Drag-and-drop file upload with real-time preview
+- 🔍 **Data Validation**: Intelligent parsing and validation of extracted data
+- 📱 **Responsive Design**: Works on desktop and mobile devices
 
 ## Installation
 
 1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/financial-statement-extractor.git
+   cd financial-statement-extractor
    ```
-   git clone https://github.com/yourusername/gemini-stock-lookup.git
-   ```
-2. Navigate to the project directory:
-   ```
-   cd gemini-stock-lookup
-   ```
-3. Install the dependencies:
-   ```
+
+2. Install dependencies:
+   ```bash
    npm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env file with your Gemini API key
    ```
 
 ## Usage
 
-1. Create a `.env` file in the root directory and add your API keys and other necessary environment variables. Refer to the `.env.example` for the required variables.
-2. Start the web server:
+1. **Start the application**:
+   ```bash
+   npm start
+   # or for development with auto-reload:
+   npm run dev
    ```
-   node src/index.js
-   ```
-3. Open your browser to `http://localhost:8080`
-4. Enter a stock ticker symbol in the form and click "Get Market Cap"
+
+2. **Open your browser** to `http://localhost:3000`
+
+3. **Upload a document**:
+   - Drag and drop or click to browse
+   - Select PDF or image files containing financial statements
+   - Maximum file size: 10MB
+
+4. **Extract data**:
+   - Click "Extract Financial Data"
+   - AI will analyze the document and extract financial information
+   - Preview the results in organized tables
+
+5. **Download Excel report**:
+   - Click "Download Excel Report" to get formatted spreadsheet
+   - Report includes separate sheets for Income Statement, Balance Sheet, and Cash Flow
 
 ## Configuration
 
-The application uses a configuration file located at `src/config.js` to manage API keys and endpoint URLs. Ensure that you have the correct settings before running the application.
+Create a `.env` file with the following variables:
+
+```env
+# Required: Google Gemini API Key
+GEMINI_API_KEY=your-gemini-api-key-here
+
+# Optional: Server configuration
+PORT=3000
+NODE_ENV=development
+```
+
+### Getting a Gemini API Key
+
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Copy the key to your `.env` file
+
+## API Endpoints
+
+### Extract Financial Data
+```
+POST /api/extract/financial-data
+Content-Type: multipart/form-data
+
+Body: file (PDF, PNG, JPG, JPEG)
+Response: {
+  "success": true,
+  "data": {
+    "incomeStatement": {...},
+    "balanceSheet": {...},
+    "cashFlow": {...},
+    "period": "Q3 2024"
+  },
+  "excelFile": "filename.xlsx"
+}
+```
+
+### Download Excel Report
+```
+GET /api/extract/download/:filename
+Response: Excel file download
+```
+
+### Check API Status
+```
+GET /api/extract/status
+Response: {
+  "status": "active",
+  "message": "Financial Statement Extractor API is running"
+}
+```
 
 ## Deployment
 

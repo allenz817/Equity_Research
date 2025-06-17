@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Statement Extractor</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Financial Statement Extractor</h1>
+            <p>Upload annual reports, screenshots, or any document containing financial statements</p>
+        </header>
+        
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <h3>Drop your files here</h3>
+                <p>or click to browse</p>
+                <p class="file-types">Supports: PDF, PNG, JPG, JPEG (Max 10MB)</p>
+                <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+            </div>
+            
+            <button id="extractBtn" class="extract-btn" disabled>
+                <span class="btn-text">Extract Financial Data</span>
+                <span class="btn-icon">🚀</span>
+            </button>
+        </div>
+        
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>Extraction Results</h2>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI is analyzing your document...</p>
+                <p class="loading-subtext">This may take a few moments</p>
+            </div>
+            
+            <div class="results" id="results" style="display: none;">
+                <div class="results-header">
+                    <h3 id="periodInfo">Financial Data Extracted</h3>
+                    <button id="downloadBtn" class="download-btn">
+                        📊 Download Excel Report
+                    </button>
+                </div>
+                
+                <div class="preview-tables">
+                    <div class="table-container">
+                        <h4>💰 Income Statement</h4>
+                        <div class="table-wrapper">
+                            <table id="incomeTable"></table>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <h4>🏦 Balance Sheet</h4>
+                        <div class="table-wrapper">
+                            <table id="balanceTable"></table>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <h4>💸 Cash Flow Statement</h4>
+                        <div class="table-wrapper">
+                            <table id="cashFlowTable"></table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reset-section">
+                    <button id="resetBtn" class="reset-btn">Upload Another Document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Powered by AI • Extract financial data from any document format</p>
+    </footer>
+    
+    <script src="js/main.js"></script>
+</body>
+</html>
