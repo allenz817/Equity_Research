@@ -4,33 +4,31 @@ const FileProcessor = require('../utils/fileProcessor');
 const path = require('path');
 
 class ExtractionController {
-    constructor() {
-        this.aiService = new AIExtractionService();
-        this.excelService = new ExcelGeneratorService();
-        this.fileProcessor = new FileProcessor();
-    }
-
     async extractAndGenerate(req, res) {
         try {
+            const aiService = new AIExtractionService();
+            const excelService = new ExcelGeneratorService();
+            const fileProcessor = new FileProcessor();
+
             if (!req.file) {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
 
             const { buffer, mimetype, originalname } = req.file;
             
-            console.log(`Processing file: ${originalname}, type: ${mimetype}, size: ${this.fileProcessor.getFileSize(buffer)}MB`);
+            console.log(`Processing file: ${originalname}, type: ${mimetype}, size: ${fileProcessor.getFileSize(buffer)}MB`);
             
             // Validate file type
-            if (!this.fileProcessor.validateFileType(mimetype)) {
+            if (!fileProcessor.validateFileType(mimetype)) {
                 return res.status(400).json({ error: 'Unsupported file type. Please upload PDF, PNG, JPG, or JPEG files.' });
             }
             
             // Process file based on type
-            const processedFile = await this.fileProcessor.processFile(buffer, mimetype);
+            const processedFile = await fileProcessor.processFile(buffer, mimetype);
             
             // Extract financial data using AI
             console.log('Extracting financial data with AI...');
-            const financialData = await this.aiService.extractFinancialData(
+            const financialData = await aiService.extractFinancialData(
                 processedFile.buffer, 
                 processedFile.mimeType || mimetype, 
                 processedFile.isText
@@ -38,7 +36,7 @@ class ExtractionController {
             
             // Generate Excel file
             console.log('Generating Excel report...');
-            const excelFileName = await this.excelService.generateExcelReport(
+            const excelFileName = await excelService.generateExcelReport(
                 financialData, 
                 originalname.split('.')[0]
             );

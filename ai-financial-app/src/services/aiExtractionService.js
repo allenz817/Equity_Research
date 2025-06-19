@@ -1,12 +1,42 @@
+const { VertexAI } = require('@google-cloud/vertexai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 class AIExtractionService {
     constructor() {
-        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    }
-
-    async extractFinancialData(fileBuffer, fileType, isText = false) {
+        // Try to initialize Vertex AI, fallback to direct Gemini API
+        this.useVertexAI = false;
+        this.model = null;
+        
+        try {
+            if (process.env.GOOGLE_CLOUD_PROJECT_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+                // Initialize Vertex AI
+                this.vertexAI = new VertexAI({
+                    project: process.env.GOOGLE_CLOUD_PROJECT_ID,
+                    location: 'us-central1'
+                });
+                
+                // Use the correct model name for Vertex AI
+                this.vertexModel = this.vertexAI.getGenerativeModel({
+                    model: 'gemini-1.5-flash'  // Remove the -001 suffix
+                });
+                this.useVertexAI = true;
+                console.log('Using Vertex AI for text generation');
+            }
+        } catch (error) {
+            console.log('Vertex AI initialization failed, falling back to direct Gemini API:', error.message);
+        }
+        
+        // Fallback to direct Gemini API
+        if (!this.useVertexAI && process.env.GEMINI_API_KEY) {
+            this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            this.directModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            console.log('Using direct Gemini API for text generation');
+        }
+        
+        if (!this.useVertexAI && !process.env.GEMINI_API_KEY) {
+            throw new Error('Neither Vertex AI nor direct Gemini API is properly configured');
+        }
+    }    async extractFinancialData(fileBuffer, fileType, isText = false) {
         try {
             const prompt = `
                 Extract financial statement data from this document. 
@@ -49,32 +79,81 @@ class AIExtractionService {
             `;
 
             let result;
-            if (isText) {
-                // For text-based content (PDF converted to text)
-                const textContent = fileBuffer.toString('utf-8');
-                result = await this.model.generateContent(`${prompt}\n\nDocument content:\n${textContent}`);
-            } else if (fileType.startsWith('image/')) {
-                // For image files
-                result = await this.model.generateContent([
-                    prompt,
-                    {
-                        inlineData: {
-                            data: fileBuffer.toString('base64'),
-                            mimeType: fileType
-                        }
-                    }
-                ]);
-            } else {
-                throw new Error('Unsupported file type for AI processing');
-            }
-
-            const response = await result.response;
-            const text = response.text();
             
-            // Parse JSON response from AI
-            return this.parseAIResponse(text);
+            if (this.useVertexAI) {
+                // Use Vertex AI
+                if (isText) {
+                    const textContent = fileBuffer.toString('utf-8');
+                    const request = {
+                        contents: [{
+                            role: 'user',
+                            parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }]
+                        }]
+                    };
+                    result = await this.vertexModel.generateContent(request);
+                } else if (fileType.startsWith('image/')) {
+                    const request = {
+                        contents: [{
+                            role: 'user',
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        data: fileBuffer.toString('base64'),
+                                        mimeType: fileType
+                                    }
+                                }
+                            ]
+                        }]
+                    };
+                    result = await this.vertexModel.generateContent(request);
+                } else {
+                    throw new Error('Unsupported file type for AI processing');
+                }
+                
+                const response = await result.response;
+                const text = response.candidates[0].content.parts[0].text;
+                return this.parseAIResponse(text);
+                
+            } else {
+                // Use direct Gemini API
+                if (isText) {
+                    const textContent = fileBuffer.toString('utf-8');
+                    result = await this.directModel.generateContent(`${prompt}\n\nDocument content:\n${textContent}`);
+                } else if (fileType.startsWith('image/')) {
+                    result = await this.directModel.generateContent([
+                        prompt,
+                        {
+                            inlineData: {
+                                data: fileBuffer.toString('base64'),
+                                mimeType: fileType
+                            }
+                        }
+                    ]);
+                } else {
+                    throw new Error('Unsupported file type for AI processing');
+                }
+                
+                const response = await result.response;
+                const text = response.text();
+                return this.parseAIResponse(text);
+            }
+            
         } catch (error) {
             console.error('AI extraction error:', error);
+            
+            // If Vertex AI fails, try fallback to direct API
+            if (this.useVertexAI && this.directModel) {
+                console.log('Vertex AI failed, trying direct Gemini API...');
+                try {
+                    this.useVertexAI = false; // Switch to direct API
+                    return await this.extractFinancialData(fileBuffer, fileType, isText);
+                } catch (fallbackError) {
+                    console.error('Fallback to direct API also failed:', fallbackError);
+                    throw new Error(`AI extraction failed: ${error.message}`);
+                }
+            }
+            
             throw new Error(`AI extraction failed: ${error.message}`);
         }
     }
